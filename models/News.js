@@ -10,6 +10,14 @@ const newsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  source: {
+    type: String,
+    default: "",
+  },
+  category: {
+    type: String,
+    default: "",
+  },
   description: {
     type: String,
     required: true,
@@ -17,6 +25,13 @@ const newsSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
+  },
+  url: {
+    type: String,
+    default: "",
+  },
+  publishedAt: {
+    type: Date,
   },
   likes: {
     type: Number,
