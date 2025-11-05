@@ -1,9 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const cookieParser = require('cookie-parser')
-const connectDB = require("./database/databaseConnection");
+const connectDB = require("./database/DatabaseConnection");
 const authRoutes = require('./routes/authRoutes')
 const newsRoutes = require('./routes/newsRoutes')
+const userRoutes = require('./routes/userRoutes')
 const { startNewsScheduler } = require('./services/newsFetcher')
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
 
 app.use('/api/auth',authRoutes)
 app.use('/api/news',newsRoutes)
+app.use('/api/user', userRoutes)
 
 // start periodic news fetching every 5 minutes
 startNewsScheduler(5)

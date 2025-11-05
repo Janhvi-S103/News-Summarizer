@@ -33,14 +33,14 @@ const newsSchema = new mongoose.Schema({
   publishedAt: {
     type: Date,
   },
-  likes: {
-    type: Number,
-    default: 0,
-  },
-  comments: {
-    type: [String],
-    default: [],
-  },
+  likes: { type: Number, default: 0 },
+  comments: [
+    {
+      username: { type: String, required: true },
+      comment: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

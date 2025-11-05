@@ -9,10 +9,7 @@ const userNewsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  liked_news: {
-    type: [String],
-    default: [],
-  },
+  likes: { type: Number, default: 0 },
   commented_news: {
     type: [String],
     default: [],
