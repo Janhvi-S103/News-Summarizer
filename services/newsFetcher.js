@@ -3,8 +3,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const News = require("../models/News");
 
-const NEWS_API_KEY = process.env.NEWS_API_KEY || "e5854bc0988e47259991e59d814d209b";
-
+const NEWS_API_KEY = process.env.NEWS_API_KEY || "";
 const CATEGORIES = [
   "business",
   "entertainment",
@@ -15,118 +14,119 @@ const CATEGORIES = [
   "technology",
 ];
 
-function createStableId(input) {
-  return crypto.createHash("sha256").update(input).digest("hex").slice(0, 32);
-}
+// Generate a stable ID for deduplication
+const createId = (input) =>
+  crypto.createHash("sha256").update(input).digest("hex").slice(0, 32);
 
-function summarizeText(text) {
+// Summarize long text
+const summarize = (text) => {
   if (!text) return "";
   const clean = String(text).trim();
-  if (clean.length <= 260) return clean;
-  return `${clean.slice(0, 257)}...`;
-}
+  return clean.length <= 260 ? clean : `${clean.slice(0, 257)}...`;
+};
 
-function normalizeArticle(article, category) {
+// Normalize each article to fit Mongo schema
+const normalizeArticle = (article, category) => {
   const title = article.title || "";
-  const sourceName = (article.source && article.source.name) || "";
+  const source = article.source?.name || article.source || "";
   const description = article.description || article.content || "";
   const url = article.url || "";
-  const publishedAt = article.publishedAt ? new Date(article.publishedAt) : undefined;
+  const publishedAt = article.publishedAt ? new Date(article.publishedAt) : new Date();
 
-  const newsIdBasis = url || `${title}-${sourceName}-${article.publishedAt || ""}`;
-  const news_id = createStableId(newsIdBasis);
+  const news_id = createId(url || `${title}-${source}-${publishedAt}`);
 
   return {
     news_id,
     title,
-    source: sourceName,
-    category: category || "",
-    description: summarizeText(description),
-    content: summarizeText(description),
+    source,
+    category,
+    description: summarize(description),
+    content: summarize(description),
     url,
     publishedAt,
   };
-}
+};
 
-async function fetchCategory(category) {
-  const url = "https://newsapi.org/v2/top-headlines";
-  const params = {
-    apiKey: NEWS_API_KEY,
-    category,
-    pageSize: 50,
-    language: "en",
-    country: "us",
-  };
-  const { data } = await axios.get(url, { params });
-  if (!data || !Array.isArray(data.articles)) return [];
-  return data.articles.map((a) => normalizeArticle(a, category));
-}
+// Remove duplicates in memory
+const dedupe = (articles) => {
+  const seen = new Set();
+  return articles.filter((a) => {
+    if (seen.has(a.news_id)) return false;
+    seen.add(a.news_id);
+    return true;
+  });
+};
 
-async function removeExisting(newsList) {
-  if (newsList.length === 0) return [];
-  const ids = newsList.map((n) => n.news_id);
+// Remove already existing items in DB
+const removeExisting = async (articles) => {
+  if (!articles.length) return [];
+  const ids = articles.map((n) => n.news_id);
   const existing = await News.find({ news_id: { $in: ids } }).select("news_id").lean();
   const existingIds = new Set(existing.map((e) => e.news_id));
-  return newsList.filter((n) => !existingIds.has(n.news_id));
-}
+  return articles.filter((n) => !existingIds.has(n.news_id));
+};
 
-function dedupeInMemory(newsList) {
-  const byId = new Map();
-  const byUrl = new Set();
-  for (const item of newsList) {
-    if (byId.has(item.news_id)) continue;
-    if (item.url && byUrl.has(item.url)) continue;
-    byId.set(item.news_id, item);
-    if (item.url) byUrl.add(item.url);
+// Fetch recent articles from NewsAPI
+async function fetchNewsFromAPI({ queries = CATEGORIES, pageSize = 20 } = {}) {
+  if (!NEWS_API_KEY) {
+    console.error("NEWS_API_KEY is missing in .env");
+    return [];
   }
-  return Array.from(byId.values());
+
+  const allResults = [];
+
+  for (const q of queries) {
+    try {
+      const resp = await axios.get("https://newsapi.org/v2/everything", {
+        params: {
+          q,
+          language: "en",
+          sortBy: "publishedAt",
+          pageSize,
+          apiKey: NEWS_API_KEY,
+        },
+        timeout: 8000,
+      });
+
+      const data = resp.data;
+      if (data.status !== "ok" || !data.articles?.length) continue;
+
+      const normalized = data.articles.map((a) => normalizeArticle(a, q));
+      allResults.push(...normalized);
+    } catch (err) {
+      console.warn(`Error fetching for "${q}":`, err.response?.data?.message || err.message);
+    }
+  }
+
+  const unique = dedupe(allResults);
+  console.log(`Fetched and deduped ${unique.length} articles`);
+  return unique;
 }
 
+// Fetch, dedupe, and save new articles
 async function fetchAndStoreOnce() {
-  const chunks = await Promise.all(
-    CATEGORIES.map(async (c) => {
-      try {
-        return await fetchCategory(c);
-      } catch (e) {
-        return [];
-      }
-    })
-  );
+  const queries = [...CATEGORIES, "world"];
+  const fetched = await fetchNewsFromAPI({ queries, pageSize: 25 });
 
-  const combined = chunks.flat();
-  const deduped = dedupeInMemory(combined);
-  const newOnly = await removeExisting(deduped);
-  if (newOnly.length === 0) return { inserted: 0, skipped: combined.length };
+  if (!fetched.length) {
+    console.log("No articles fetched this run.");
+    return { inserted: 0, skipped: 0 };
+  }
+
+  const newOnly = await removeExisting(fetched);
+  if (!newOnly.length) {
+    console.log("All articles already exist.");
+    return { inserted: 0, skipped: fetched.length };
+  }
 
   try {
     const result = await News.insertMany(newOnly, { ordered: false });
-    return { inserted: result.length, skipped: combined.length - result.length };
-  } catch (e) {
-    return { inserted: 0, skipped: combined.length };
+    console.log(`Inserted ${result.length} new articles.`);
+    return { inserted: result.length, skipped: fetched.length - result.length };
+  } catch (err) {
+    console.error("Insert error:", err.message);
+    return { inserted: 0, skipped: fetched.length };
   }
 }
 
-let intervalRef = null;
-
-function startNewsScheduler(everyMinutes = 5) {
-  if (intervalRef) return;
-  const ms = Math.max(1, everyMinutes) * 60 * 1000;
-  intervalRef = setInterval(() => {
-    fetchAndStoreOnce().catch(() => {});
-  }, ms);
-}
-
-function stopNewsScheduler() {
-  if (intervalRef) {
-    clearInterval(intervalRef);
-    intervalRef = null;
-  }
-}
-
-module.exports = {
-  fetchAndStoreOnce,
-  startNewsScheduler,
-  stopNewsScheduler,
-};
-
-
+module.exports = { fetchAndStoreOnce, fetchNewsFromAPI };
