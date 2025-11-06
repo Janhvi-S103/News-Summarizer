@@ -1,55 +1,55 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const News = require('../models/News')
-const UserNews = require('../models/UserNews')
-const User = require('../models/User')
+const News = require("../models/News");
+const UserNews = require("../models/UserNews");
+const User = require("../models/User");
 
 exports.comment = async (req, res) => {
-    // Input : Comment, newsId
-    const { comment, newsId } = req.body;
-    
-    // Get username from database using req.user info from authMiddleware
-    let username = "";
-    try {
-        const user = await User.findById(req.user.userId).select('username');
-        username = user.username;
-        if (!username) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
+  // Input : Comment, newsId
+  const { comment, newsId } = req.body;
+
+  // Get username from database using req.user info from authMiddleware
+  let username = "";
+  try {
+    const user = await User.findById(req.user.userId).select("username");
+    username = user.username;
+    if (!username) {
+      return res.status(404).json({ message: "User not found" });
     }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
 
-
-    // Logic: save comment to db with username and newsId in UserNews. Update comment in News model as well
-    //Check if username, newsId exists in UserNews
-    try {
+  // Logic: save comment to db with username and newsId in UserNews. Update comment in News model as well
+  //Check if username, newsId exists in UserNews
+  try {
     let userNews = await UserNews.findOne({ username, news_id: newsId });
     const commentId = new mongoose.Types.ObjectId(); // 🔹 same ID for both comments
 
     if (!userNews) {
-        userNews = new UserNews({
+      userNews = new UserNews({
         username,
         news_id: newsId,
-        comments: [{ _id: commentId, comment }]
-        });
+        comments: [{ _id: commentId, comment }],
+      });
     } else {
-        userNews.comments.push({ _id: commentId, comment });
+      userNews.comments.push({ _id: commentId, comment });
     }
     await userNews.save();
 
     const newsItem = await News.findOne({ news_id: newsId });
     if (newsItem) {
-        newsItem.comments.push({ _id: commentId, username, comment });
-        await newsItem.save();
+      newsItem.comments.push({ _id: commentId, username, comment });
+      await newsItem.save();
     }
 
-    res.status(200).json({ message: 'Comment added successfully', commentId });
-    } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-    }
-
-}
+    res.status(200).json({ message: "Comment added successfully", commentId });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 exports.deleteComment = async (req, res) => {
   const { commentId, newsId } = req.body;
@@ -69,12 +69,12 @@ exports.deleteComment = async (req, res) => {
 
     // Check if comment existed in at least one place
     if (newsResult.modifiedCount === 0 && userNewsResult.modifiedCount === 0) {
-      return res.status(404).json({ message: 'Comment not found' });
+      return res.status(404).json({ message: "Comment not found" });
     }
 
-    res.status(200).json({ message: 'Comment deleted successfully' });
+    res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -83,9 +83,9 @@ exports.like = async (req, res) => {
 
   try {
     // 1️⃣ Get username from logged-in user
-    const user = await User.findById(req.user.userId).select('username');
+    const user = await User.findById(req.user.userId).select("username");
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     const username = user.username;
 
@@ -117,61 +117,128 @@ exports.like = async (req, res) => {
     // 3️⃣ Update total likes count in News model
     const newsItem = await News.findOne({ news_id: newsId });
     if (!newsItem) {
-    return res.status(404).json({ message: 'News item not found' });
+      return res.status(404).json({ message: "News item not found" });
     }
 
     // Ensure likes is numeric
-    if (typeof newsItem.likes !== 'number') {
-    newsItem.likes = Number(newsItem.likes) || 0;
+    if (typeof newsItem.likes !== "number") {
+      newsItem.likes = Number(newsItem.likes) || 0;
     }
 
     // If user liked → +1, if unliked → -1 (prevent negative)
     newsItem.likes = isLiked
-    ? newsItem.likes + 1
-    : Math.max(0, newsItem.likes - 1);
-
+      ? newsItem.likes + 1
+      : Math.max(0, newsItem.likes - 1);
 
     await newsItem.save();
 
     // 4️⃣ Respond with updated info
     res.status(200).json({
-      message: `News ${isLiked ? 'liked' : 'unliked'} successfully`,
+      message: `News ${isLiked ? "liked" : "unliked"} successfully`,
       totalLikes: newsItem.likes,
       userLikeStatus: userNews.likes,
     });
-
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 exports.activity = async (req, res) => {
-    // Input : none (get from req.user)
-    const user = req.user;
+  // Input : none (get from req.user)
+  const user = req.user;
 
-    //get username from db
-    let username = "";
-    try {
-        const userData = await User.findById(user.userId).select('username');
-        username = userData.username;
-        if (!username) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
+  //get username from db
+  let username = "";
+  try {
+    const userData = await User.findById(user.userId).select("username");
+    username = userData.username;
+    if (!username) {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+
+  // Logic: fetch comments and liked news from UserNews
+  try {
+    const userNews = await UserNews.find({ username });
+
+    if (!userNews || userNews.length === 0) {
+      return res.status(404).json({ message: "No activity found for user" });
     }
 
-    // Logic: fetch comments and liked news from UserNews
-    try {
-        const userNews = await UserNews.find({ username });
+    res.status(200).json({ activity: userNews });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
-        if (!userNews || userNews.length === 0) {
-            return res.status(404).json({ message: 'No activity found for user' });
-        }
+//Search & filter
 
-        res.status(200).json({ activity: userNews });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+exports.searchNews = async (req, res) => {
+  try {
+    const {
+      query,
+      category,
+      source,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = "publishedAt",
+      order = "desc",
+    } = req.query;
+
+    const filter = {};
+
+    // Keyword search in title, description, or content
+    if (query) {
+      filter.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+        { content: { $regex: query, $options: "i" } },
+      ];
     }
-    
-}
+
+    // Category filter
+    if (category) filter.category = category;
+
+    // Source filter
+    if (source) filter.source = source;
+
+    // Date range filter
+    if (startDate || endDate) {
+      filter.publishedAt = {};
+      if (startDate) filter.publishedAt.$gte = new Date(startDate);
+      if (endDate) filter.publishedAt.$lte = new Date(endDate);
+    }
+
+    // Sorting
+    const sortOrder = order === "asc" ? 1 : -1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    // Pagination
+    const skip = (page - 1) * limit;
+
+    // Query execution
+    const news = await News.find(filter)
+      .sort(sortOptions)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
+
+    // Total count for pagination metadata
+    const total = await News.countDocuments(filter);
+
+    res.status(200).json({
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      results: news,
+    });
+  } catch (error) {
+    console.error("Error searching news:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
