@@ -8,6 +8,15 @@ exports.comment = async (req, res) => {
   // Input : Comment, newsId
   const { comment, newsId } = req.body;
 
+  // Validate input using regex list
+    const vulgarWords = ["badword1", "badword2", "badword3"]; // Add more words as needed
+    const vulgarRegex = new RegExp(`\\b(${vulgarWords.join("|")})\\b`, "i");
+    if (vulgarRegex.test(comment)) {
+      return res
+        .status(400)
+        .json({ message: "Comment contains inappropriate language" });
+    }
+
   // Get username from database using req.user info from authMiddleware
   let username = "";
   try {
@@ -173,6 +182,56 @@ exports.activity = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
+};
+
+//View user profile
+exports.viewProfile = async (req, res) => {
+    const {username} = req.body;
+
+    try {
+        const user = await User.findOne({username}).select('-password');
+
+        res.status(200).json({ user });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+//Modify user profile
+exports.editProfile = async (req, res) => {
+    const {username, bio_data} = req.body;
+    
+    try {
+        const user = await User.findOneAndUpdate(
+            {username},
+            {bio_data},
+            {new: true}
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+//Search & filter
+
+exports.searchNews = async (req, res) => {
+  try {
+        res.status(200).json({ user });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 };
 
 //Search & filter
