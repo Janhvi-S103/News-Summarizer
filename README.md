@@ -14,8 +14,7 @@ A web app that fetches news articles, displays summaries, and allows users to se
 - 🌐 Responsive frontend built using EJS
 - 🗄️ Backend powered by Express.js and MongoDB
 
-## 🧩 Folder Structure
-
+## 📁 Folder Structure
 NEWS-SUMMARIZER/
 │
 ├── controllers/
