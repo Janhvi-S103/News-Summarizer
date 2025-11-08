@@ -43,36 +43,34 @@ exports.register = async (req, res) =>
         try {
             const { username, password } = req.body
 
-            // validate the input
-            if (!username || !password) {
-                return res.status(400).json({ message: "email or password required" })
-            }
-
-            // check if the user exists
-            const user = await User.findOne({ username })
-            if (!user) {
-              return   res.status(401).json({ message: "user not found" })
-            }
-
-            // Compare passwords
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ message: "Invalid credentials" });
-            }
-
-            // Create JWT token
-            const payload = { userId: user._id };
-            const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: "7d",
-            });
-
-            // setting the cookie
-            res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
-
-            res.json({  message: "Login successful" });
+        if (!username || !password) {
+            logger.error(`Login failed - Missing credentials`);
+            return res.status(400).json({ message: "username or password required" })
         }
-        catch(error)
-        {
-            res.status(500).json({message:error.message})
-        }   
+
+        const user = await User.findOne({ username })
+        if (!user) {
+            logger.warn(`Login failed - User not found: ${username}`);
+            return res.status(401).json({ message: "Invalid credentials" })
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            logger.error(`Login failed - Invalid password for: ${username}`);
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const payload = { userId: user._id };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: "7d",
+        });
+
+        res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        logger.info(`User logged in successfully: ${username}`);
+        res.json({ message: "Login successful" });
     }
+    catch(error) {
+        logger.error(`Login error: ${error.message}`, { stack: error.stack });
+        res.status(500).json({ message: error.message })
+    }
+}
