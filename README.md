@@ -15,6 +15,7 @@ A web app that fetches news articles, displays summaries, and allows users to se
 - 🗄️ Backend powered by Express.js and MongoDB
 
 ## 📁 Folder Structure
+```bash
 NEWS-SUMMARIZER/
 │
 ├── controllers/
@@ -49,6 +50,8 @@ NEWS-SUMMARIZER/
 ├── package.json                   # Project metadata and dependencies
 ├── package-lock.json              # Locked dependency versions
 └── README.md                      # Project documentation
+```
+
 
 ## 🧾 API Endpoints
 
