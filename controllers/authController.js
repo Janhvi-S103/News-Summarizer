@@ -1,7 +1,7 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
-const logger = require('../utils/logging')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const logger = require('../utils/logging');
 
 // registering a user
 exports.register = async (req, res) => 
@@ -38,40 +38,58 @@ exports.register = async (req, res) =>
     }
 }
 
-    // loign handling
-    exports.login = async (req, res) => 
-    {
-        try {
-            const { username, password } = req.body
+// loign handling
+exports.login = async (req, res) => {
+    const { username, password } = req.body;
+    
+    try {
+        logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
-            logger.error(`Login failed - Missing credentials`);
-            return res.status(400).json({ message: "username or password required" })
+            logger.warn({
+                event: 'failed_login',
+                reason: 'missing_credentials',
+                username
+            });
+            return res.status(400).json({ message: 'Missing credentials' });
         }
 
-        const user = await User.findOne({ username })
+        const user = await User.findOne({ username });
         if (!user) {
-            logger.warn(`Login failed - User not found: ${username}`);
-            return res.status(401).json({ message: "Invalid credentials" })
+            logger.warn({
+                event: 'failed_login',
+                reason: 'user_not_found',
+                username
+            });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            logger.error(`Login failed - Invalid password for: ${username}`);
-            return res.status(401).json({ message: "Invalid credentials" });
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            logger.warn({
+                event: 'failed_login',
+                reason: 'invalid_password',
+                username
+            });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const payload = { userId: user._id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "7d",
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+        logger.info({
+            event: 'successful_login',
+            userId: user._id,
+            username
         });
 
-        res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
-        logger.info(`User logged in successfully: ${username}`);
-        res.json({ message: "Login successful" });
+        res.cookie('token', token, { httpOnly: true });
+        res.json({ message: 'Login successful' });
+    } catch (error) {
+        logger.error({
+            event: 'login_error',
+            error: error.message,
+            stack: error.stack,
+            username
+        });
+        res.status(500).json({ message: 'Server error' });
     }
-    catch(error) {
-        logger.error(`Login error: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ message: error.message })
-    }
-}
+};
