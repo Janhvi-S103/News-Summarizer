@@ -1,0 +1,30 @@
+:root {
+    /* 🌅 LIGHT THEME */
+    --accent: #d9ad77;
+    --accent-light: #f2dcc9;
+    --page-bg: #fffaf6;
+    --card-bg: #ffffff;
+    --text: #403f3e;
+    --border: #e2d5ca;
+    --input-bg: #f8f5f2;
+    --gradient-bg: linear-gradient(135deg, #d9b29c 0%, #d9ad77 100%);
+  }
+  
+  /* 🌙 DARK THEME */
+  .dark-theme {
+    --accent: #d9ad77;
+    --accent-light: #d9b29c;
+    --page-bg: #1f1e1d;
+    --card-bg: #2b2a28;
+    --text: #f2dcc9;
+    --border: #4a4744;
+    --input-bg: #3a3836;
+    --gradient-bg: linear-gradient(135deg, #403f3e 0%, #736a62 100%);
+  }
+  
+  /* Defaults */
+  :root {
+    --radius: 12px;
+    --transition: 0.3s ease;
+  }
+  

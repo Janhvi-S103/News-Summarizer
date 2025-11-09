@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || "News Summarizer" %></title>
+
+  <!-- Core Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+
+  <!-- Theme Script -->
+  <script defer src="/js/themeToggle.js"></script>
+</head>
+<body>
+  <% 
+    // Only include header on dashboard
+    const currentPath = typeof path !== 'undefined' ? path : '';
+    const showHeader = currentPath.includes('/dashboard');
+  %>
+
+  <% if (showHeader) { %>
+    <%- include('../partials/header.ejs') %>
+  <% } %>
+
+  <main>
+    <%- body %>
+  </main>
+
+  <%- include('../partials/footer.ejs') %>
+</body>
+</html>

@@ -1,0 +1,77 @@
+
+<section class="login-page">
+  <!-- THEME TOGGLE -->
+  <div class="theme-toggle-container">
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- LEFT SIDE - Animated Brand Area -->
+  <div class="login-left">
+    <div class="logo">
+      <img src="/assets/place.png" alt="News Summarizer Logo">
+      <h1>Join News Summarizer</h1>
+      <p>Stay informed. Simplified. Summarized.</p>
+    </div>
+    <div class="sample-news">
+      <div class="news-card">🗞 Get the latest world news summarized instantly.</div>
+      <div class="news-card">💬 Engage with trending topics and share opinions.</div>
+      <div class="news-card">🌙 Switch themes and enjoy a clean reading mode.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE - Register Form -->
+  <div class="login-right">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="/assets/place.png" alt="logo" />
+      </div>
+      <h2>Create Account</h2>
+      <p>Sign up to access curated news summaries.</p>
+
+      <form class="login-form" action="/register" method="POST">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+
+        <button type="submit" class="btn-login">Register</button>
+      </form>
+
+      <div class="extra-links">
+        <p>Already have an account? <a href="/login">Login here</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Initialize theme toggle
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("themeToggle");
+    const html = document.documentElement;
+
+    // Restore previous theme
+    const isDark = localStorage.getItem("theme") === "dark";
+    if (isDark) {
+      html.classList.add("dark-theme");
+      toggle.checked = true;
+    }
+
+    toggle.addEventListener("change", () => {
+      if (toggle.checked) {
+        html.classList.add("dark-theme");
+        localStorage.setItem("theme", "dark");
+      } else {
+        html.classList.remove("dark-theme");
+        localStorage.setItem("theme", "light");
+      }
+    });
+  });
+</script>

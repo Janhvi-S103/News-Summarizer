@@ -1,0 +1,53 @@
+
+<section class="login-page">
+  <!-- Dark/Light Toggle -->
+  <div class="theme-toggle-container">
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+    <span id="themeLabel">Light Mode</span>
+  </div>
+
+  <!-- Left Section -->
+  <div class="login-left">
+    <div class="logo">
+      <img src="/assets/place.png" alt="News Logo">
+      <h1>News Summarizer</h1>
+      <p>Your Daily Dose of Summarized Insight</p>
+    </div>
+
+    <div class="sample-news">
+      <div class="news-card">Breaking: AI revolutionizes healthcare…</div>
+      <div class="news-card">Markets surge on positive economic data…</div>
+      <div class="news-card">Climate summit yields historic agreement…</div>
+    </div>
+  </div>
+
+  <!-- Right Section -->
+  <div class="login-right">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="/assets/place.png" alt="Logo">
+      </div>
+      <h2>Welcome Back</h2>
+      <p>Sign in to continue your news journey</p>
+
+      <form action="/api/auth/login" method="POST" class="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="email" placeholder="Enter your username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+        <button type="submit" class="btn-login">Sign In</button>
+      </form>
+
+      <div class="extra-links">
+        <p>Don't have an account? <a href="/register">Register here</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="/js/themeToggle.js"></script>

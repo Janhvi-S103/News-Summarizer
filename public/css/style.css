@@ -1,0 +1,347 @@
+/* --- GLOBAL STYLING --- */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: var(--page-bg);
+    color: var(--text);
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+  
+  /* --- LOGIN PAGE --- */
+  .login-page {
+    display: flex;
+    height: 100vh;
+    position: relative;
+    background: var(--gradient-bg);
+    transition: background 0.6s ease;
+    overflow: hidden;
+  }
+  
+  /* --- THEME TOGGLE --- */
+  .theme-toggle-container {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    z-index: 10;
+  }
+  
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 24px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: 0.4s;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s;
+  }
+  input:checked + .slider {
+    background-color: var(--accent);
+  }
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+  
+  /* --- LEFT SIDE --- */
+  .login-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--gradient-bg);
+    color: #ffffff;
+    box-shadow: inset -10px 0 25px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  
+  .logo img {
+    width: 80px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+    animation: floatLogo 3s ease-in-out infinite, glowPulse 4s ease-in-out infinite;
+  }
+  @keyframes floatLogo {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2)); }
+    50% { filter: drop-shadow(0 5px 15px var(--accent-light)); }
+  }
+  
+  .logo h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: none; /* 🔥 remove dark shadow that made text unreadable */
+    color: #ffffff;
+  }
+  
+  .logo p {
+    font-size: 1rem;
+    opacity: 0.95;
+    color: #f2dcc9;
+    margin-bottom: 30px;
+    text-shadow: none;
+  }
+  
+  
+  .sample-news {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeInUp 1s ease;
+  }
+.news-card {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 14px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 500;
+}
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* --- RIGHT SIDE (AUTH CARD) --- */
+  .login-right {
+    flex: 1;
+    background: var(--page-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  
+  .auth-card {
+    background: var(--card-bg);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    color: var(--text);
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    animation: slideUp 0.8s ease;
+  }
+  
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .auth-logo img {
+    width: 55px;
+    margin-bottom: 1.2rem;
+  }
+  
+  .auth-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .auth-card p {
+    opacity: 0.75;
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+    text-align: left;
+  }
+  
+  .login-form input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    background: var(--input-bg);
+    color: var(--text);
+    outline: none;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .login-form input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  
+  .btn-login {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .btn-login:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(217, 173, 119, 0.3);
+  }
+  
+  
+  .extra-links {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  .extra-links a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  /* --- DASHBOARD STYLING --- */
+.dashboard {
+  padding: 2rem;
+  min-height: 100vh;
+  background: var(--page-bg);
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.logo-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-logo {
+  width: 45px;
+  animation: floatLogo 3s ease-in-out infinite;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#searchInput,
+#categoryFilter,
+#sortOrder {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  transition: all var(--transition);
+}
+
+#searchInput:focus {
+  border-color: var(--accent);
+}
+
+.news-grid {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.news-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.6s ease both;
+}
+
+.news-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.news-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.news-content {
+  padding: 1rem;
+}
+
+.news-content h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.news-content p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  margin-bottom: 1rem;
+}
+
+.news-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  transition: color 0.2s;
+}
+
+.btn-icon:hover {
+  color: var(--accent);
+}

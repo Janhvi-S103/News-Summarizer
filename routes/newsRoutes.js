@@ -1,8 +1,17 @@
 const express = require('express');
 const { fetchAndStoreOnce, fetchNewsFromAPI } = require('../services/newsFetcher');
 const News = require('../models/News');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
+
+// Dashboard page render
+router.get('/dashboard', authMiddleware, (req, res) => {
+  res.render('dashboard/index', { 
+    title: 'Dashboard', 
+    path: '/dashboard' 
+  });
+});
 
 // Fetch and store news
 router.post('/fetch-now', async (req, res) => {
@@ -25,7 +34,8 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch news' });
   }
 });
-// get a preview of the news from api 
+
+// Preview from API
 router.get('/fetch-preview', async (req, res) => {
   try {
     const qParam = req.query.q;
@@ -37,4 +47,5 @@ router.get('/fetch-preview', async (req, res) => {
     res.status(500).json({ message: err?.message || 'Preview failed' });
   }
 });
+
 module.exports = router;

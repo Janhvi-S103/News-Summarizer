@@ -1,0 +1,55 @@
+
+
+<div class="dashboard">
+
+  <!-- Top Bar -->
+  <header class="dashboard-header">
+    <div class="logo-title">
+      <img src="/assets/place.png" alt="Logo" class="dash-logo">
+      <h1>News Summarizer</h1>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Search news..." />
+      <select id="categoryFilter">
+        <option value="">All</option>
+        <option value="business">Business</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="general">General</option>
+        <option value="health">Health</option>
+        <option value="science">Science</option>
+        <option value="sports">Sports</option>
+        <option value="technology">Technology</option>
+      </select>
+
+      <select id="sortOrder">
+        <option value="latest">Latest</option>
+        <option value="oldest">Oldest</option>
+      </select>
+
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" id="themeSwitcher">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- News Cards -->
+  <section id="newsContainer" class="news-grid">
+    <p class="loading-text">Fetching latest news...</p>
+  </section>
+</div>
+
+<!-- Comment Modal -->
+<%- include('../partials/commentModal') %>
+
+<script src="/js/themeToggle.js"></script>
+<script src="/js/newsActions.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initDashboard === 'function') initDashboard();
+  });
+</script>

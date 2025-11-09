@@ -1,0 +1,30 @@
+
+<section class="profile-hero">
+  <div class="profile-card">
+    <div class="avatar-large" id="avatarPreview">J</div>
+    <div class="profile-info">
+      <h2 id="username">Username</h2>
+      <p id="email">user@example.com</p>
+      <p id="bio">News enthusiast</p>
+      <button id="editProfileBtn" class="btn">Edit Profile</button>
+      <input id="avatarUpload" type="file" accept="image/*" style="display:none" />
+    </div>
+  </div>
+</section>
+
+<section class="profile-tabs">
+  <nav>
+    <button class="tab active" data-tab="saved">Saved News</button>
+    <button class="tab" data-tab="liked">Liked News</button>
+    <button class="tab" data-tab="comments">My Comments</button>
+    <button class="tab" data-tab="activity">Activity</button>
+  </nav>
+
+  <div id="tabContent" class="tab-content">
+    <!-- filled by profile.js -->
+  </div>
+</section>
+
+<script>
+  if (typeof initProfilePage === 'function') initProfilePage();
+</script>
