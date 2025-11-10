@@ -1,11 +1,10 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logger = require('../utils/logging');
+const { hashPassword, comparePassword, generateToken } = require('../utils/auth');
+const { setAuthCookie } = require('../utils/cookie');
 
 // registering a user
-exports.register = async (req, res) => 
-{
+exports.register = async (req, res) => {
     try {
         const { password, username } = req.body;
         
@@ -24,69 +23,55 @@ exports.register = async (req, res) =>
             return res.status(400).json({ message: "User already exists" });
         }
 
-        // hash the password
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
+        // Create user with hashed password
+        const hashedPassword = await hashPassword(password);
+        user = new User({ username, password: hashedPassword });
+        await user.save();
 
-        user = new User({username, password: hashedPassword})
-        await user.save()
-
-        // create jwt token
-        const payload = { userId: user._id }
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: '7d'
-        })
-
-        // setting the cookie
-        res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        // Generate token and set cookie
+        const token = generateToken(user._id);
+        setAuthCookie(res, token);
         
         logger.info(`User registered successfully`, { userId: user._id, username });
-        
-        res.status(201).json({ message: 'Registration successful' })
+        res.status(201).json({ message: 'Registration successful' });
     }
     catch(error) {
         logger.error(`Registration error for username: ${req.body.username}`, { 
             error: error.message, 
             stack: error.stack 
         });
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
 }
 
 // login handling
 exports.login = async (req, res) => {
     try {
-        const { username, password } = req.body
+        const { username, password } = req.body;
         
         logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
             logger.warn(`Login failed - Missing credentials`, { username });
-            return res.status(400).json({ message: "username or password required" })
+            return res.status(400).json({ message: "username or password required" });
         }
 
-        const user = await User.findOne({ username })
+        const user = await User.findOne({ username });
         if (!user) {
             logger.warn(`Login failed - User not found`, { username });
-            return res.status(401).json({ message: "Invalid credentials" })
+            return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        const isValidPassword = await comparePassword(password, user.password);
+        if (!isValidPassword) {
             logger.warn(`Login failed - Invalid password`, { username });
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const payload = { userId: user._id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "7d",
-        });
-
-        res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        const token = generateToken(user._id);
+        setAuthCookie(res, token);
         
-        // This was the line causing the [object Object] log. It's now fixed.
         logger.info(`User logged in successfully`, { userId: user._id, username });
-        
         res.json({ message: "Login successful" });
     }
     catch(error) {
@@ -94,6 +79,6 @@ exports.login = async (req, res) => {
             error: error.message, 
             stack: error.stack 
         });
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
 }
