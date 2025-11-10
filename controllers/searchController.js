@@ -97,40 +97,6 @@ exports.searchNews = async (req, res) => {
   }
 };
 
-// Get trending news
-exports.getTrending = async (req, res) => {
-  const startTime = Date.now();
-  const { limit = 10 } = req.query;
-
-  logger.info('Fetch trending news', { limit });
-
-  try {
-    const trendingNews = await News.find()
-      .sort({ views: -1, likes: -1 })
-      .limit(parseInt(limit));
-
-    const duration = Date.now() - startTime;
-
-    logger.info('Trending news fetched', {
-      duration,
-      returnedCount: trendingNews.length
-    });
-
-    res.status(200).json({
-      trendingNews,
-      performanceMetrics: {
-        responseTimeMs: duration
-      }
-    });
-  } catch (error) {
-    logger.error('Get trending error', {
-      error: error.message,
-      stack: error.stack
-    });
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
 // Get news by category
 exports.getByCategory = async (req, res) => {
   const startTime = Date.now();

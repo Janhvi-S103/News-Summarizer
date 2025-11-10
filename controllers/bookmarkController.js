@@ -4,36 +4,36 @@ const User = require('../models/User');
 
 // Toggle bookmark
 exports.toggleBookmark = async (req, res) => {
-  const { newsId } = req.body;
+  const { news_id } = req.body;
   const userId = req.user.userId;
 
-  logger.info('Bookmark toggle attempt', { newsId, userId });
+  logger.info('Bookmark toggle attempt', { news_id, userId });
 
-  if (!newsId) {
-    logger.warn('Bookmark validation failed - missing newsId', { userId });
-    return res.status(400).json({ message: "newsId is required" });
+  if (!news_id) {
+    logger.warn('Bookmark validation failed - missing news_id', { userId });
+    return res.status(400).json({ message: "news_id is required" });
   }
 
   try {
-    let entry = await UserNews.findOne({ news_id: newsId });
+    let entry = await UserNews.findOne({ news_id });
     const previousState = entry?.bookmarked;
 
     if (!entry) {
-      entry = new UserNews({ news_id: newsId, bookmarked: true });
-      logger.info('bookmark ON', { newsId, userId, previousState: false });
+      entry = new UserNews({ news_id, bookmarked: true });
+      logger.info('bookmark ON', { news_id, userId, previousState: false });
     } else {
       entry.bookmarked = !entry.bookmarked;
       if (entry.bookmarked) {
-        logger.info('bookmark ON', { newsId, userId, previousState });
+        logger.info('bookmark ON', { news_id, userId, previousState });
       } else {
-        logger.info('bookmark OFF', { newsId, userId, previousState });
+        logger.info('bookmark OFF', { news_id, userId, previousState });
       }
     }
 
     await entry.save();
 
     logger.info('Bookmark updated', {
-      newsId,
+      news_id,
       userId,
       bookmarkStatus: entry.bookmarked
     });

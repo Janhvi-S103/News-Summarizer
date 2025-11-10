@@ -49,4 +49,7 @@ const userNewsSchema = new mongoose.Schema({
   comments: [commentSchema],
 });
 
+// Index news_id for faster lookups
+userNewsSchema.index({ news_id: 1 });
+
 module.exports = mongoose.model("UserNews", userNewsSchema);
