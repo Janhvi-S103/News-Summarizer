@@ -7,20 +7,28 @@ const logger = require('../utils/logging');
 exports.register = async (req, res) => 
 {
     try {
-
         const { password, username } = req.body;
+        
+        logger.info(`Registration attempt for username: ${username}`);
+
+        // Validate input
+        if (!username || !password) {
+            logger.warn(`Registration failed - Missing credentials`, { username, hasPassword: !!password });
+            return res.status(400).json({ message: "Username and password are required" });
+        }
 
         // Check if user already exists
         let user = await User.findOne({ username });
         if (user) {
+            logger.warn(`Registration failed - User already exists: ${username}`);
             return res.status(400).json({ message: "User already exists" });
         }
 
-        // hash the passowrd
+        // hash the password
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
 
-        user = new User({username,password:hashedPassword})
+        user = new User({username, password: hashedPassword})
         await user.save()
 
         // create jwt token
@@ -31,9 +39,16 @@ exports.register = async (req, res) =>
 
         // setting the cookie
         res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        
+        logger.info(`User registered successfully`, { userId: user._id, username });
+        
         res.status(201).json({ message: 'Registration successful' })
     }
     catch(error) {
+        logger.error(`Registration error for username: ${req.body.username}`, { 
+            error: error.message, 
+            stack: error.stack 
+        });
         res.status(500).json({ message: error.message })
     }
 }
