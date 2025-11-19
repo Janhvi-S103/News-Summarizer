@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News Portal</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>📰 News Portal</h1>
+    <nav id="mainNav">
+    <button id="homeBtn" class="active"><span>Home</span></button>
+    <button id="profileBtn"><span>Profile</span></button>
+    <button id="bookmarksBtn"><span>Bookmarks</span></button>
+    <button id="logoutBtn"><span>Logout</span></button>
+    </nav>
+
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- Auth Section -->
+    <section id="authSection">
+      <h2>Welcome!</h2>
+    <div class="auth-container">
+
+    <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">Login</button>
+        <button class="tab-btn" data-tab="register">Sign Up</button>
+    </div>
+
+    <div class="auth-forms">
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form active">
+        <h3>Login</h3>
+        <input type="text" id="loginUsername" placeholder="Username" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button type="submit">Login</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" class="auth-form">
+        <h3>Create Account</h3>
+        <input type="text" id="registerUsername" placeholder="Choose Username" required />
+        <input type="password" id="registerPassword" placeholder="Choose Password" required />
+        <button type="submit">Sign Up</button>
+        </form>
+    </div>
+    </div>
+    </section>
+
+    <!-- News Section -->
+    <section id="newsSection" class="hidden">
+      <h2>Latest News</h2>
+    <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Search..." />
+
+    <select id="categorySelect">
+        <option value="">All</option>
+        <option value="sports">Sports</option>
+        <option value="business">Business</option>
+        <option value="technology">Technology</option>
+    </select>
+
+    <input type="date" id="startDate">
+    <input type="date" id="endDate">
+
+    <select id="sortSelect">
+        <option value="">Sort By</option>
+        <option value="latest">Latest</option>
+        <option value="oldest">Oldest</option>
+    </select>
+
+    <button type="submit" id="applyBtn">Search</button>
+    </form>
+
+    <!-- Pagination -->
+    <div id="paginationControls" class="pagination" style="margin-top:12px;">
+    <button id="prevPageBtn">Prev</button>
+    <span id="currentPage">1</span> / <span id="totalPages">1</span>
+    <button id="nextPageBtn">Next</button>
+    </div>
+
+      <div id="newsList">
+        <!-- Sample News Cards for Layout Demo -->
+        <div class="news-card">
+          <div class="news-card-header">
+            <h3>Breaking: Major Tech Breakthrough Announced</h3>
+            <div class="news-meta">
+              <span class="source">TechNews</span>
+              <span class="category">Technology</span>
+              <span class="date">Nov 12, 2025</span>
+            </div>
+            <p class="news-description">
+              Scientists have made a groundbreaking discovery in quantum computing that could revolutionize the industry. The new technology promises to increase processing power exponentially.
+            </p>
+          </div>
+          <div class="news-card-footer">
+            <button class="action-btn">
+              ❤️ <span>243</span>
+            </button>
+            <button class="action-btn">
+              💬 <span>56</span>
+            </button>
+            <button class="action-btn">
+              🔖
+            </button>
+          </div>
+        </div>
+
+        <div class="news-card">
+          <div class="news-card-header">
+            <h3>Global Climate Summit Reaches Historic Agreement</h3>
+            <div class="news-meta">
+              <span class="source">World News</span>
+              <span class="category">Environment</span>
+              <span class="date">Nov 11, 2025</span>
+            </div>
+            <p class="news-description">
+              World leaders have come together to sign a landmark agreement on climate change, committing to ambitious carbon reduction targets for the next decade.
+            </p>
+          </div>
+          <div class="news-card-footer">
+            <button class="action-btn liked">
+              ❤️ <span>1.2K</span>
+            </button>
+            <button class="action-btn">
+              💬 <span>342</span>
+            </button>
+            <button class="action-btn bookmarked">
+              🔖
+            </button>
+          </div>
+        </div>
+
+        <div class="news-card">
+          <div class="news-card-header">
+            <h3>New Study Reveals Surprising Health Benefits</h3>
+            <div class="news-meta">
+              <span class="source">Health Today</span>
+              <span class="category">Health</span>
+              <span class="date">Nov 10, 2025</span>
+            </div>
+            <p class="news-description">
+              Researchers have discovered unexpected health benefits from a common everyday activity. The findings could change how we approach wellness and preventive care.
+            </p>
+          </div>
+          <div class="news-card-footer">
+            <button class="action-btn">
+              ❤️ <span>567</span>
+            </button>
+            <button class="action-btn">
+              💬 <span>89</span>
+            </button>
+            <button class="action-btn">
+              🔖
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile Section -->
+    <section id="profileSection" class="hidden">
+      <h2>Your Profile</h2>
+      <div id="profileInfo">
+        <h3>Username</h3>
+        <p>Your bio will appear here. Share something interesting about yourself!</p>
+      </div>
+      <textarea id="bioInput" placeholder="Tell us about yourself..."></textarea>
+      <button id="saveBioBtn" class="btn">💾 Save Bio</button>
+    </section>
+
+    <!-- Bookmarks Section -->
+    <section id="bookmarksSection" class="hidden">
+      <h2>📚 Bookmarked Articles</h2>
+      <div id="bookmarkedList">
+        <div class="empty-state">
+          <div class="icon">📚</div>
+          <h3>No bookmarks yet</h3>
+          <p>Start bookmarking articles to read them later!</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

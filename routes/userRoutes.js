@@ -5,7 +5,7 @@ const { toggleLike, getLikesCount } = require("../controllers/likeController");
 const { addReply, deleteReply, getReplies } = require("../controllers/replyController");
 const { voteComment, voteReply } = require("../controllers/voteController");
 const { viewProfile, editProfile } = require("../controllers/profileController");
-const { searchNews } = require("../controllers/searchController");
+const { searchNews, getNewsById, getCategories } = require("../controllers/searchController");
 const { toggleBookmark, getBookmarkedNews } = require("../controllers/bookmarkController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -36,6 +36,7 @@ router.get("/likes/:news_id", getLikesCount);
 // Profile routes
 // Get profile by username
 router.get("/profile/:username", viewProfile);
+router.get("/profile",authMiddleware, viewProfile);
 
 // Edit logged-in user's profile
 // @accepts application/x-www-form-urlencoded
@@ -44,10 +45,12 @@ router.put("/profile", authMiddleware, editProfile);
 
 // Search routes
 router.get("/search", searchNews);
+router.get("/getNews/:newsId", getNewsById);
+router.get("/categories", getCategories);
 
 // Bookmark routes
 router.post("/bookmarks", authMiddleware, toggleBookmark);
-router.get("/bookmarks/:username", authMiddleware, getBookmarkedNews);
+router.get("/bookmarks", authMiddleware, getBookmarkedNews);
 
 module.exports = router;
 

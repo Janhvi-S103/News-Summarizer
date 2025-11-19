@@ -3,11 +3,10 @@ const User = require('../models/User');
 
 // View user profile by username
 exports.viewProfile = async (req, res) => {
-  const { username } = req.params;
+  let { username } = req.params;
 
   if (!username) {
-    logger.warn('View profile failed - no username provided');
-    return res.status(400).json({ message: "Username is required" });
+    username = req.user.username; // Default to logged-in user's username
   }
 
   logger.info('View profile attempt', { username });
