@@ -114,7 +114,7 @@ async function loadNews(query = "") {
     
         <div class="news-card-footer">
     
-          <button class="action-btn like-btn" onclick="toggleLike('${item.news_id}')">
+          <button class="action-btn like-btn" id="like-btn-${item.news_id}" onclick="toggleLike('${item.news_id}')">
             <i class="bi bi-heart"></i>
             <span>${item.likes ?? 0}</span>
           </button>
@@ -182,23 +182,46 @@ function renderNews(results) {
     container.innerHTML = "<p>No articles found.</p>";
     return;
   }
-
   results.forEach(item => {
     const div = document.createElement("div");
     div.className = "news-item";
     div.innerHTML = `
-      <h3>${item.title}</h3>
-      <p>${item.description}</p>
-      <button onclick="toggleLike('${item.news_id}')">❤️ Like ${item.likes ?? 0}</button>
-      <button onclick="toggleBookmark('${item.news_id}')">🔖 Bookmark</button>
-      <div class="comment-box">
-        <input type="text" id="comment-${item.news_id}" placeholder="Write a comment..." />
-        <button onclick="addComment('${item.news_id}')">Send</button>
+      <div class="news-card">
+    
+        <div class="news-card-header">
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+        </div>
+    
+        <div class="news-card-footer">
+    
+          <button class="action-btn like-btn" id="like-btn-${item.news_id}" onclick="toggleLike('${item.news_id}')">
+            <i class="bi bi-heart"></i>
+            <span>${item.likes ?? 0}</span>
+          </button>
+    
+          <button class="action-btn comment-btn">
+            <i class="bi bi-chat-left-text"></i>
+            <span id="comment-count-${item.news_id}"></span>
+          </button>
+    
+          <button class="action-btn bookmark-btn" onclick="toggleBookmark('${item.news_id}')">
+            <i class="bi bi-bookmark"></i>
+          </button>
+    
+        </div>
+    
+        <div class="comment-box">
+          <input type="text" id="comment-${item.news_id}" placeholder="Write a comment..." />
+          <button onclick="addComment('${item.news_id}')">Send</button>
+        </div>
+    
+        <div id="comments-${item.news_id}"></div>
+    
       </div>
-      <div id="comments-${item.news_id}"></div>
     `;
+
     container.appendChild(div);
-    // loadComments is async — don't await to keep UI responsive
     loadComments(item.news_id);
   });
 }
@@ -290,6 +313,7 @@ function initSearchControls() {
 
 /* ---------- initialize on page load ---------- */
 document.addEventListener("DOMContentLoaded", () => {
+  performSearch(true);
   initSearchControls();   // your existing initializer (optional)
 
   // Pagination handlers
@@ -611,14 +635,47 @@ function escapeHtml(str = "") {
 
 // ---------- LIKES ----------
 async function toggleLike(newsId) {
-  await fetch(`${baseURL}/user/likes`, {
-    method: "POST",
-    credentials: 'include',
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ news_id: newsId }),
-  });
-  loadNews();
+  try {
+    const res = await fetch(`${baseURL}/user/likes`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ news_id: newsId }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return alert(data.message);
+    }
+
+    // ---- Update only the button ----
+    const btn = document.getElementById(`like-btn-${newsId}`);
+    if (!btn) return;
+
+    const icon = btn.querySelector("i");
+    const countSpan = btn.querySelector("span");
+
+    // update like count
+    countSpan.textContent = data.totalLikes;
+
+    // toggle styles/icons
+    if (data.isLiked) {
+      icon.classList.remove("bi-heart");
+      icon.classList.add("bi-heart-fill");
+      btn.classList.add("liked");
+    } else {
+      icon.classList.remove("bi-heart-fill");
+      icon.classList.add("bi-heart");
+      btn.classList.remove("liked");
+    }
+
+  } catch (err) {
+    console.error("Like error:", err);
+    alert("Error toggling like");
+  }
 }
+
+
 
 // ---------- BOOKMARKS ----------
 async function toggleBookmark(newsId) {

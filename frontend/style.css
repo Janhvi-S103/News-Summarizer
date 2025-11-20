@@ -768,7 +768,7 @@ textarea {
 
 
 #mainNav {
-  display: flex !important;
+  display: none;
 }
 
 .auth-container {
