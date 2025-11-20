@@ -17,22 +17,22 @@ function showSection(section) {
 }
 
 // ---------- AUTH ----------
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const forms = document.querySelectorAll(".auth-form");
+const tabButtons = document.querySelectorAll(".tab-btn");
+const forms = document.querySelectorAll(".auth-form");
 
-  tabButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      // remove active from buttons
-      tabButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    // remove active from buttons
+    tabButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
 
-      // show correct form
-      forms.forEach(form => form.classList.remove("active"));
-      document
-        .getElementById(btn.dataset.tab + "Form")
-        .classList.add("active");
-    });
+    // show correct form
+    forms.forEach(form => form.classList.remove("active"));
+    document
+      .getElementById(btn.dataset.tab + "Form")
+      .classList.add("active");
   });
+});
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -105,16 +105,41 @@ async function loadNews(query = "") {
     const div = document.createElement("div");
     div.className = "news-item";
     div.innerHTML = `
-      <h3>${item.title}</h3>
-      <p>${item.description}</p>
-      <button onclick="toggleLike('${item.news_id}')">❤️ Like ${item.likes}</button>
-      <button onclick="toggleBookmark('${item.news_id}')">🔖 Bookmark</button>
-      <div class="comment-box">
-        <input type="text" id="comment-${item.news_id}" placeholder="Write a comment..." />
-        <button onclick="addComment('${item.news_id}')">Send</button>
+      <div class="news-card">
+    
+        <div class="news-card-header">
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+        </div>
+    
+        <div class="news-card-footer">
+    
+          <button class="action-btn like-btn" onclick="toggleLike('${item.news_id}')">
+            <i class="bi bi-heart"></i>
+            <span>${item.likes ?? 0}</span>
+          </button>
+    
+          <button class="action-btn comment-btn">
+            <i class="bi bi-chat-left-text"></i>
+            <span id="comment-count-${item.news_id}"></span>
+          </button>
+    
+          <button class="action-btn bookmark-btn" onclick="toggleBookmark('${item.news_id}')">
+            <i class="bi bi-bookmark"></i>
+          </button>
+    
+        </div>
+    
+        <div class="comment-box">
+          <input type="text" id="comment-${item.news_id}" placeholder="Write a comment..." />
+          <button onclick="addComment('${item.news_id}')">Send</button>
+        </div>
+    
+        <div id="comments-${item.news_id}"></div>
+    
       </div>
-      <div id="comments-${item.news_id}"></div>
     `;
+
     container.appendChild(div);
     loadComments(item.news_id);
   });
@@ -219,47 +244,47 @@ async function performSearch(pushToHistory = false) {
 
 /* ---------- wire up controls ---------- */
 function initSearchControls() {
-    const searchForm = document.getElementById("searchForm");
-    const categorySelect = document.getElementById("categorySelect");
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
-    const sortSelect = document.getElementById("sortSelect");
-    const applyBtn = document.getElementById("applyBtn");
+  const searchForm = document.getElementById("searchForm");
+  const categorySelect = document.getElementById("categorySelect");
+  const startDateInput = document.getElementById("startDate");
+  const endDateInput = document.getElementById("endDate");
+  const sortSelect = document.getElementById("sortSelect");
+  const applyBtn = document.getElementById("applyBtn");
 
-    const prevBtn = document.getElementById("prevPageBtn");
-    const nextBtn = document.getElementById("nextPageBtn");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
 
-    if (!applyBtn || !prevBtn || !nextBtn) {
-        console.error("Search controls missing in DOM!");
-        return;
+  if (!applyBtn || !prevBtn || !nextBtn) {
+    console.error("Search controls missing in DOM!");
+    return;
+  }
+
+  // Main search trigger
+  searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    searchState.query = searchInput.value;
+    searchState.category = categorySelect.value;
+    searchState.startDate = startDateInput.value;
+    searchState.endDate = endDateInput.value;
+    searchState.sort = sortSelect.value;
+    searchState.page = 1;     // reset page on new search
+    performSearch(true);
+  });
+
+  // Pagination buttons
+  prevBtn.addEventListener("click", () => {
+    if (searchState.page > 1) {
+      searchState.page--;
+      performSearch(false);
     }
+  });
 
-    // Main search trigger
-    searchForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        searchState.query = searchInput.value;
-        searchState.category = categorySelect.value;
-        searchState.startDate = startDateInput.value;
-        searchState.endDate = endDateInput.value;
-        searchState.sort = sortSelect.value;
-        searchState.page = 1;     // reset page on new search
-        performSearch(true);
-    });
-
-    // Pagination buttons
-    prevBtn.addEventListener("click", () => {
-        if (searchState.page > 1) {
-            searchState.page--;
-            performSearch(false);
-        }
-    });
-
-    nextBtn.addEventListener("click", () => {
-        if (searchState.page < searchState.totalPages) {
-            searchState.page++;
-            performSearch(false);
-        }
-    });
+  nextBtn.addEventListener("click", () => {
+    if (searchState.page < searchState.totalPages) {
+      searchState.page++;
+      performSearch(false);
+    }
+  });
 }
 
 
@@ -312,6 +337,15 @@ document.getElementById("searchForm").addEventListener("submit", (e) => {
   loadNews(finalQuery);
 });
 
+const navButtons = document.querySelectorAll('nav button');
+
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
 // ---------- COMMENTS ----------
 async function loadComments(news_id) {
   // remember current news id for actions that need it
@@ -341,28 +375,46 @@ async function loadComments(news_id) {
       data.comments.map(async (c) => {
         const repliesHtml = await loadReplies(c._id, news_id); // pass news_id
         return `
-          <div class="comment" id="comment-${c._id}">
-            <b>${escapeHtml(c.username)}</b>: ${escapeHtml(c.comment)}
+  <div class="comment-item" id="comment-${c._id}">
 
-            <div class="votes">
-              <button onclick="voteComment('${c._id}', 'up', '${news_id}')">⬆</button>
-              <button onclick="voteComment('${c._id}', 'down', '${news_id}')">⬇</button>
-              <span>Score: ${c.score || 0}</span>
-            </div>
+    <div class="comment-header">
+      <strong>${escapeHtml(c.username)}</strong>
+      <span class="comment-text">${escapeHtml(c.comment)}</span>
+    </div>
 
-            <button onclick="toggleReplyBox('${c._id}')">Reply</button>
-            <button onclick="deleteComment('${news_id}', '${c._1d || c._id}')">🗑️</button>
+    <div class="comment-actions">
 
-            <div id="reply-box-${c._id}" class="reply-box" style="display:none;">
-              <textarea id="reply-text-${c._id}" placeholder="Write a reply..."></textarea>
-              <button onclick="addReply('${news_id}', '${c._id}')">Submit</button>
-            </div>
+      <button class="vote-btn" onclick="voteComment('${c._id}', 'up', '${news_id}')">
+        <i class="bi bi-hand-thumbs-up"></i>
+      </button>
 
-            <div class="replies">
-              ${repliesHtml}
-            </div>
-          </div>
-        `;
+      <span class="comment-score">${c.score || 0}</span>
+
+      <button class="vote-btn" onclick="voteComment('${c._id}', 'down', '${news_id}')">
+        <i class="bi bi-hand-thumbs-down"></i>
+      </button>
+
+      <button class="reply-btn" onclick="toggleReplyBox('${c._id}')">
+        <i class="bi bi-reply-fill"></i> Reply
+      </button>
+
+      <button class="delete-comment-btn" onclick="deleteComment('${news_id}', '${c._id}')">
+        <i class="bi bi-trash3-fill"></i>
+      </button>
+
+    </div>
+
+    <div id="reply-box-${c._id}" class="reply-box" style="display:none;">
+      <textarea id="reply-text-${c._id}" placeholder="Write a reply..."></textarea>
+      <button onclick="addReply('${news_id}', '${c._id}')">Submit</button>
+    </div>
+
+    <div class="replies replies-container">
+      ${repliesHtml}
+    </div>
+
+  </div>
+`;
       })
     );
 
@@ -669,6 +721,5 @@ async function checkLogin() {
   nav.style.display = "none";
   showSection(authSection);
 }
-
 
 checkLogin();
