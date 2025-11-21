@@ -80,8 +80,8 @@ exports.login = async (req, res) => {
         logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
-            logger.error(`Login failed - Missing credentials`, { username });
-            return res.status(400).json({ message: "username or password required" })
+            logger.warn(`Login failed - Missing credentials`, { username });
+            return res.status(400).json({ message: "Username and password are required" });
         }
 
         const user = await User.findOne({ username });
