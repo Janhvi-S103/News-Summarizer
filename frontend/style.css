@@ -1126,3 +1126,56 @@ button[type="submit"],
   font-weight: 700;
   border-radius: 12px;
 }
+
+.activity-wrapper {
+    margin: 20px auto;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.activity-card {
+    width: 100%;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-lg);
+}
+
+.activity-header h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-on-dark);
+}
+
+.activity-body p {
+    color: var(--text-muted);
+    margin: 6px 0;
+    font-size: 1rem;
+}
+
+.activity-comments {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+}
+
+.activity-comments h4 {
+    color: var(--text-on-dark);
+    margin-bottom: 8px;
+}
+
+.single-comment {
+    border-left: 3px solid #93bfb7;
+    padding-left: 12px;
+    margin: 8px 0;
+    color: var(--text-muted);
+}
+
+

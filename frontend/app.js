@@ -765,10 +765,74 @@ document.getElementById("profileUpload").addEventListener("change", async (e) =>
 });
 
 
+//PROFILE ACTIVITY
+async function loadUserActivity() {
+    try {
+        const res = await fetch(`${baseURL}/user/activity`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const data = await res.json();
+        const container = document.getElementById("activityContainer");
+
+        container.innerHTML = "";
+
+        if (!data.activity || data.activity.length === 0) {
+            container.innerHTML = `<p>No activity found.</p>`;
+            return;
+        }
+
+        // Load all activity items
+        for (const item of data.activity) {
+
+            // ⬅ Fetch news details for each activity item
+            const newsRes = await fetch(`${baseURL}/user/getNews/${item.news_id}`);
+            const newsData = await newsRes.json();
+
+            const title = newsData?.news?.title || "Unknown News Title";
+
+            const card = document.createElement("div");
+            card.className = "activity-card";
+
+            card.innerHTML = `
+                <div class="activity-header">
+                    <h3>${title}</h3>
+                </div>
+
+                <div class="activity-body">
+                    <p><strong>Liked:</strong> ${item.likes > 0 ? "Yes" : "No"}</p>
+                    <p><strong>Bookmarked:</strong> ${item.bookmarked ? "Yes" : "No"}</p>
+
+                    <div class="activity-comments">
+                        <h4>Comments (${item.comments.length})</h4>
+                        ${
+                            item.comments.length === 0
+                            ? "<p>No comments</p>"
+                            : item.comments.map(c => `
+                                <div class="single-comment">
+                                    <p>${c.comment}</p>
+                                    <span>${new Date(c.timestamp).toLocaleString()}</span>
+                                </div>
+                              `).join("")
+                        }
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(card);
+        }
+
+    } catch (error) {
+        console.error("Error fetching user activity:", error);
+    }
+}
+
+
 
 // ---------- NAVIGATION ----------
 homeBtn.onclick = () => { loadNews(); showSection(newsSection); };
-profileBtn.onclick = () => { loadProfile(); showSection(profileSection); };
+profileBtn.onclick = () => { loadProfile(); loadUserActivity(); showSection(profileSection); };
 bookmarksBtn.onclick = () => { loadBookmarked(); showSection(bookmarksSection); };
 logoutBtn.onclick = async () => {
   await fetch(`${baseURL}/auth/logout`, {
