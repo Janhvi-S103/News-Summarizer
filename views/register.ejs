@@ -1,10 +1,48 @@
 <%- include('partials/header') %>
 
-<div class="auth-container">
-  <div class="auth-card">
-    <h1 class="auth-title">Create Account</h1>
+<style>
+  body {
+    overflow: hidden;
+    height: 100vh;
+  }
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  .error-message.show {
+    display: block;
+  }
+  .form-input.error {
+    border-color: #ef4444;
+  }
+</style>
+
+<div
+  style="
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+  "
+>
+  <div
+    class="logo"
+    style="justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem"
+  >
+    <span>⚡</span> NewsBite
+  </div>
+
+  <div class="auth-card" style="max-width: 420px; width: 100%; padding: 2rem">
+    <h1 class="auth-title" style="margin-bottom: 1.5rem; font-size: 1.75rem">
+      Create Account
+    </h1>
     <form id="registerForm">
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom: 1rem">
         <label for="username" class="form-label">Username</label>
         <input
           type="text"
@@ -13,8 +51,9 @@
           class="form-input"
           required
         />
+        <div id="usernameError" class="error-message"></div>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom: 1rem">
         <label for="password" class="form-label">Password</label>
         <input
           type="password"
@@ -23,6 +62,7 @@
           class="form-input"
           required
         />
+        <div id="passwordError" class="error-message"></div>
       </div>
       <button
         type="submit"
@@ -32,17 +72,151 @@
         Sign Up
       </button>
     </form>
-    <div class="auth-footer">
+    <div class="auth-footer" style="margin-top: 1.5rem">
       Already have an account? <a href="/login">Login</a>
     </div>
   </div>
 </div>
 
 <script>
+  // Client-side validation functions based on validation.js
+  function validateUsername(username) {
+    const errors = [];
+
+    if (!username) {
+      errors.push("Username is required");
+      return { isValid: false, errors };
+    }
+
+    username = String(username).trim();
+
+    if (username.length < 3) {
+      errors.push("Username must be at least 3 characters long");
+    }
+    if (username.length > 30) {
+      errors.push("Username must not exceed 30 characters");
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_.]+$/;
+    if (!usernameRegex.test(username)) {
+      errors.push(
+        "Username can only contain letters, numbers, underscore (_), and dot (.)"
+      );
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      value: username,
+    };
+  }
+
+  function validatePassword(password) {
+    const errors = [];
+
+    if (!password) {
+      errors.push("Password is required");
+      return { isValid: false, errors };
+    }
+
+    password = String(password);
+
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters long");
+    }
+    if (password.length > 64) {
+      errors.push("Password must not exceed 64 characters");
+    }
+
+    const hasNumber = /\d/.test(password);
+    if (!hasNumber) {
+      errors.push("Password must contain at least one number (0-9)");
+    }
+
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
+      password
+    );
+    if (!hasSpecialChar) {
+      errors.push(
+        "Password must contain at least one special character (!@#$%^&* etc.)"
+      );
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  // Real-time validation
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const usernameErrorDiv = document.getElementById("usernameError");
+  const passwordErrorDiv = document.getElementById("passwordError");
+
+  usernameInput.addEventListener("blur", () => {
+    const validation = validateUsername(usernameInput.value);
+    if (!validation.isValid) {
+      usernameInput.classList.add("error");
+      usernameErrorDiv.textContent = validation.errors.join(". ");
+      usernameErrorDiv.classList.add("show");
+    } else {
+      usernameInput.classList.remove("error");
+      usernameErrorDiv.classList.remove("show");
+    }
+  });
+
+  passwordInput.addEventListener("blur", () => {
+    const validation = validatePassword(passwordInput.value);
+    if (!validation.isValid) {
+      passwordInput.classList.add("error");
+      passwordErrorDiv.textContent = validation.errors.join(". ");
+      passwordErrorDiv.classList.add("show");
+    } else {
+      passwordInput.classList.remove("error");
+      passwordErrorDiv.classList.remove("show");
+    }
+  });
+
+  // Form submission with validation
   document
     .getElementById("registerForm")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const usernameValue = usernameInput.value;
+      const passwordValue = passwordInput.value;
+
+      // Validate username
+      const usernameValidation = validateUsername(usernameValue);
+      if (!usernameValidation.isValid) {
+        usernameInput.classList.add("error");
+        usernameErrorDiv.textContent = usernameValidation.errors.join(". ");
+        usernameErrorDiv.classList.add("show");
+        alert(
+          "Username validation failed:\n" + usernameValidation.errors.join("\n")
+        );
+        return;
+      }
+
+      // Validate password
+      const passwordValidation = validatePassword(passwordValue);
+      if (!passwordValidation.isValid) {
+        passwordInput.classList.add("error");
+        passwordErrorDiv.textContent = passwordValidation.errors.join(". ");
+        passwordErrorDiv.classList.add("show");
+        alert(
+          "Password validation failed:\n" + passwordValidation.errors.join("\n")
+        );
+        return;
+      }
+
+      // Clear any errors
+      usernameInput.classList.remove("error");
+      passwordInput.classList.remove("error");
+      usernameErrorDiv.classList.remove("show");
+      passwordErrorDiv.classList.remove("show");
+
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
 
