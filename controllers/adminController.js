@@ -362,34 +362,44 @@ exports.registrationStats = async (req, res) => {
   logger.info('registrationStats attempt', { adminId, days: daysNum });
 
   try {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysNum);
-    startDate.setHours(0, 0, 0, 0);
-
-    // Get all users registered in the date range
+    // Get ALL users (not filtered by date range yet)
     const users = await User.find({
-      createdAt: { $gte: startDate }
+      createdAt: { $exists: true }
     }).select('createdAt');
 
-    // Group by date in JavaScript
+    // Group by date in JavaScript (using LOCAL date, not UTC)
     const dateMap = {};
     users.forEach(user => {
-      const date = new Date(user.createdAt);
-      const dateStr = date.toISOString().split('T')[0];
-      dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
+      if (user.createdAt) {
+        const date = new Date(user.createdAt);
+        // Convert to local date string (YYYY-MM-DD)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
+      }
     });
 
-    // Fill in missing days with zero counts
+    // Fill in the last N days with counts (from oldest to newest)
     const result = [];
-    const currentDate = new Date(startDate);
+    const today = new Date();
+    // Don't set hours - keep the local time to get correct local date
 
-    for (let i = 0; i < daysNum; i++) {
-      const dateStr = currentDate.toISOString().split('T')[0];
+    // Start from N days ago
+    for (let i = daysNum - 1; i >= 0; i--) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      
+      const year = checkDate.getFullYear();
+      const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+      const day = String(checkDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
       result.push({
         date: dateStr,
         count: dateMap[dateStr] || 0
       });
-      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     const totalRegistrations = await User.countDocuments();
