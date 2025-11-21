@@ -1,0 +1,17 @@
+<nav class="navbar">
+  <div class="nav-content">
+    <a href="/" class="logo"> <span>⚡</span> NewsBite </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/search" class="nav-link">Search</a>
+      <% if (user) { %>
+      <a href="/bookmarks" class="nav-link">Bookmarks</a>
+      <a href="/activity" class="nav-link">Activity</a>
+      <a href="/profile" class="nav-link">Profile</a>
+      <% } else { %>
+      <a href="/login" class="nav-link">Login</a>
+      <a href="/register" class="btn btn-primary">Sign Up</a>
+      <% } %>
+    </div>
+  </div>
+</nav>

@@ -2,80 +2,63 @@ const mongoose = require("mongoose");
 const { sanitizeText } = require("../utils/sanitizer");
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
+const News = require('../models/News');
 const User = require('../models/User');
 
 // Add comment
 exports.addComment = async (req, res) => {
   const { comment, news_id } = req.body;
-  
+
   logger.info('Comment attempt', { news_id, userId: req.user.userId });
 
   if (!comment || !news_id) {
-    logger.error('Comment validation failed - missing fields', {
-      hasComment: !!comment,
-      hasNewsId: !!news_id
-    });
     return res.status(400).json({ message: "Comment text and news_id are required" });
-  }  try {
+  }
+
+  try {
     const user = await User.findById(req.user.userId).select("username");
-    if (!user?.username) {
-      logger.warn('Comment failed - user not found', { userId: req.user.userId });
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Sanitize the comment
-    const sanitized = sanitizeText(comment);
-    if (sanitized.wasCensored) {
-      logger.warn('Comment censored', {
-          news_id,
-        userId: req.user.userId,
-        censoredTerms: sanitized.censoredTerms,
-        originalLength: comment.length,
-        sanitizedLength: sanitized.text.length
-      });
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) {
+      return res.status(404).json({ message: "News item not found" });
     }
 
-      let userNews = await UserNews.findOne({ news_id });
-      if (!userNews) {
-        userNews = new UserNews({ news_id });
-      }
-
+    const sanitized = sanitizeText(comment);
     const commentId = new mongoose.Types.ObjectId();
-    userNews.comments.push({
+
+    const newComment = {
       _id: commentId,
       userId: req.user.userId,
       username: user.username,
       comment: sanitized.text || comment,
-      originalText: comment,
-      wasCensored: sanitized.wasCensored,
-      censoredTerms: sanitized.censoredTerms || []
-    });
+      timestamp: new Date(),
+      replies: []
+    };
 
+    newsItem.comments.unshift(newComment); // Add to beginning
+    await newsItem.save();
+
+    // Also update UserNews to track that this user commented (optional, but good for activity feed)
+    let userNews = await UserNews.findOne({ news_id, username: user.username });
+    if (!userNews) {
+      userNews = new UserNews({ news_id, username: user.username });
+    }
+    // We don't need to store the full comment in UserNews anymore if we don't want to duplicate,
+    // but for the Activity Feed to work as currently implemented (fetching UserNews), we might need to.
+    // The current profile.ejs iterates over activity.comments.
+    // Let's keep a lightweight record or duplicate it for now to ensure Activity Feed works.
+    userNews.comments.push(newComment);
     await userNews.save();
-
-    logger.info('Comment added successfully', {
-      news_id,
-      commentId,
-      username: user.username,
-      wasCensored: sanitized.wasCensored
-    });
 
     res.status(201).json({
       message: "Comment added successfully",
-      comment: {
-        _id: commentId,
-        username: user.username,
-        comment: sanitized.text || comment,
-        wasCensored: sanitized.wasCensored
-      }
+      comment: newComment
     });
   } catch (error) {
-    logger.error('Comment error', {
-      error: error.message,
-      stack: error.stack,
-      news_id,
-      userId: req.user.userId
-    });
+    logger.error('Comment error', { error: error.message, stack: error.stack });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -85,39 +68,22 @@ exports.deleteComment = async (req, res) => {
   const commentId = req.params.commentId;
   const { news_id } = req.body;
 
-  logger.info('Delete comment attempt', { commentId, news_id, userId: req.user.userId });
-
   try {
-    const result = await UserNews.findOneAndUpdate(
-      { news_id },
-      { $pull: { comments: { _id: commentId, userId: req.user.userId } } },
-      { new: true }
-    );
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) return res.status(404).json({ message: "News not found" });
 
-    if (!result) {
-      logger.warn('Delete comment failed - not found or unauthorized', {
-        commentId,
-        news_id,
-        userId: req.user.userId
-      });
-      return res.status(404).json({ message: "Comment not found or unauthorized" });
+    const comment = newsItem.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    if (comment.userId.toString() !== req.user.userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
-    logger.info('Comment deleted successfully', {
-      commentId,
-      news_id,
-      userId: req.user.userId
-    });
+    comment.remove();
+    await newsItem.save();
 
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {
-    logger.error('Delete comment error', {
-      error: error.message,
-      stack: error.stack,
-      commentId,
-      news_id,
-      userId: req.user.userId
-    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -125,41 +91,16 @@ exports.deleteComment = async (req, res) => {
 // Get all comments for a news
 exports.getComments = async (req, res) => {
   const { news_id } = req.params;
-  const { page = 1, limit = 10 } = req.query;
-
-  logger.info('Fetching comments', { news_id, page, limit });
 
   try {
-    const userNews = await UserNews.findOne({ news_id });
-
-    if (!userNews) {
-      logger.warn('Comments fetch failed - news not found', { news_id });
-      return res.status(404).json({ message: "News not found" });
-    }
-
-    const comments = userNews.comments || [];
-    const start = (page - 1) * limit;
-    const paginatedComments = comments.slice(start, start + limit);
-
-    logger.info('Comments fetched successfully', {
-      news_id,
-      totalComments: comments.length,
-      returnedComments: paginatedComments.length,
-      page
-    });
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) return res.status(404).json({ message: "News not found" });
 
     res.status(200).json({
-      comments: paginatedComments,
-      total: comments.length,
-      page: parseInt(page),
-      totalPages: Math.ceil(comments.length / limit)
+      comments: newsItem.comments,
+      total: newsItem.comments.length
     });
   } catch (error) {
-    logger.error('Comments fetch error', {
-      error: error.message,
-      stack: error.stack,
-      news_id
-    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

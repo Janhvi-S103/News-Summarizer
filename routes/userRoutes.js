@@ -49,6 +49,14 @@ router.get("/search", searchNews);
 router.post("/bookmarks", authMiddleware, toggleBookmark);
 router.get("/bookmarks/:username", authMiddleware, getBookmarkedNews);
 
+const voteController = require('../controllers/voteController');
+
+// ... existing routes ...
+
+// Vote routes
+router.post('/comments/vote', authMiddleware, voteController.voteComment);
+router.post('/replies/vote', authMiddleware, voteController.voteReply);
+
 module.exports = router;
 
 

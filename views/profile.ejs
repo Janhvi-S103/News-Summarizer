@@ -1,0 +1,92 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <div class="profile-header" style="margin-top: 3rem">
+    <div class="profile-avatar">
+      <%= user.username.charAt(0).toUpperCase() %>
+    </div>
+    <h1 class="profile-name"><%= user.username %></h1>
+    <% if (user.bio_data) { %>
+    <p class="profile-bio"><%= user.bio_data %></p>
+    <% } else { %>
+    <p class="profile-bio" style="color: var(--text-muted); font-style: italic">
+      No bio yet. Add one below!
+    </p>
+    <% } %>
+
+    <!-- Bio Edit Form -->
+    <div
+      class="bio-edit-section"
+      style="max-width: 500px; margin: 1.5rem auto 0"
+    >
+      <form
+        id="bioForm"
+        style="display: flex; flex-direction: column; gap: 1rem"
+      >
+        <textarea
+          name="bio"
+          class="form-input"
+          placeholder="Tell us about yourself..."
+          rows="3"
+          style="resize: vertical; min-height: 80px"
+        >
+<%= user.bio_data || '' %></textarea
+        >
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="align-self: flex-end"
+        >
+          Save Bio
+        </button>
+      </form>
+    </div>
+
+    <!-- Logout Button -->
+    <a href="/logout" class="btn btn-outline" style="margin-top: 1.5rem"
+      >Logout</a
+    >
+  </div>
+</div>
+
+<script>
+  // Bio Form Submission
+  document.getElementById("bioForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const bio_data = formData.get("bio");
+
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio_data }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("Bio updated successfully!");
+        const bioDisplay = document.querySelector(".profile-bio");
+        if (bioDisplay) {
+          if (bio_data) {
+            bioDisplay.textContent = bio_data;
+            bioDisplay.style.color = "var(--text-main)";
+            bioDisplay.style.fontStyle = "normal";
+          } else {
+            bioDisplay.textContent = "No bio yet. Add one below!";
+            bioDisplay.style.color = "var(--text-muted)";
+            bioDisplay.style.fontStyle = "italic";
+          }
+        }
+      } else {
+        alert(result.message || "Failed to update bio");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while updating bio");
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>
