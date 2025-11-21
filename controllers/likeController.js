@@ -2,6 +2,7 @@ const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const News = require('../models/News');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Toggle like/unlike
 exports.toggleLike = async (req, res) => {
@@ -39,6 +40,14 @@ exports.toggleLike = async (req, res) => {
     }
 
     await userNews.save();
+
+    await Activity.create({
+      userId: userId,
+      username: username,
+      action: 'news.like',
+      news_id,
+      meta: { liked: !isLiked }
+    });
 
     // Update total likes in News model
     const newsItem = await News.findOne({ news_id });

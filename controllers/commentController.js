@@ -3,6 +3,7 @@ const { sanitizeText } = require("../utils/sanitizer");
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Add comment
 exports.addComment = async (req, res) => {
@@ -53,6 +54,15 @@ exports.addComment = async (req, res) => {
 
     await userNews.save();
 
+    await Activity.create({
+      userId: req.user.userId,
+      username: user.username,
+      action: 'comment.create',
+      news_id,
+      targetId: commentId,
+      meta: { wasCensored: sanitized.wasCensored }
+    });
+
     logger.info('Comment added successfully', {
       news_id,
       commentId,
@@ -102,6 +112,14 @@ exports.deleteComment = async (req, res) => {
       });
       return res.status(404).json({ message: "Comment not found or unauthorized" });
     }
+
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'comment.delete',
+      news_id,
+      targetId: commentId
+    });
 
     logger.info('Comment deleted successfully', {
       commentId,

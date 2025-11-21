@@ -5,6 +5,7 @@ const connectDB = require("./database/DatabaseConnection");
 const authRoutes = require('./routes/authRoutes')
 const newsRoutes = require('./routes/newsRoutes')
 const userRoutes = require('./routes/userRoutes')
+const adminRoutes = require('./routes/adminRoutes')
 const requestLogger = require('./middlewares/requestLogger');
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 app.use('/api/auth',authRoutes)
 app.use('/api/news',newsRoutes)
 app.use('/api/user', userRoutes)
+app.use('/api/admin', adminRoutes)
 
 
 app.listen(PORT, () => {

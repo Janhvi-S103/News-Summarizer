@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 const logger = require('../utils/logging');
 const { hashPassword, comparePassword, generateToken } = require('../utils/auth');
 const { setAuthCookie } = require('../utils/cookie');
@@ -60,6 +61,14 @@ exports.register = async (req, res) => {
         const token = generateToken(user._id);
         setAuthCookie(res, token);
         
+        // Log registration activity
+        await Activity.create({
+            userId: user._id,
+            username: user.username,
+            action: 'auth.register',
+            meta: { ip: req.ip }
+        });
+        
         logger.info(`User registered successfully`, { userId: user._id, username });
         res.status(201).json({ message: 'Registration successful' });
     }
@@ -98,6 +107,17 @@ exports.login = async (req, res) => {
 
         const token = generateToken(user._id);
         setAuthCookie(res, token);
+        
+        // Update lastLogin and log activity
+        user.lastLogin = new Date();
+        await user.save();
+        
+        await Activity.create({
+            userId: user._id,
+            username: user.username,
+            action: 'auth.login',
+            meta: { ip: req.ip, userAgent: req.headers['user-agent'] }
+        });
         
         logger.info(`User logged in successfully`, { userId: user._id, username });
         res.json({ message: "Login successful" });

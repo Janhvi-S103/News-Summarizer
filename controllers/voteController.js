@@ -1,6 +1,7 @@
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Helper function to handle voting logic
 async function handleVote(type, userId, voteType, itemId, parentId = null) {
@@ -113,6 +114,14 @@ exports.voteComment = async (req, res) => {
   try {
     const result = await handleVote('comment', userId, voteType, commentId);
 
+    await Activity.create({
+      userId: userId,
+      username: req.user.username,
+      action: 'comment.vote',
+      targetId: commentId,
+      meta: { voteType }
+    });
+
     logger.info('Comment vote successful', {
       commentId,
       userId,
@@ -153,6 +162,14 @@ exports.voteReply = async (req, res) => {
 
   try {
     const result = await handleVote('reply', userId, voteType, replyId, commentId);
+
+    await Activity.create({
+      userId: userId,
+      username: req.user.username,
+      action: 'reply.vote',
+      targetId: replyId,
+      meta: { voteType, parentId: commentId }
+    });
 
     logger.info('Reply vote successful', {
       commentId,
