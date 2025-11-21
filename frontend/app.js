@@ -106,12 +106,13 @@ async function loadNews(query = "") {
     div.className = "news-item";
     div.innerHTML = `
       <div class="news-card">
-    
+    <a href="${item.url}" target="_blank" rel="noopener noreferrer">
+
         <div class="news-card-header">
           <h3>${item.title}</h3>
           <p>${item.description}</p>
         </div>
-    
+    </a>
         <div class="news-card-footer">
     
           <button class="action-btn like-btn" id="like-btn-${item.news_id}" onclick="toggleLike('${item.news_id}')">
@@ -187,12 +188,12 @@ function renderNews(results) {
     div.className = "news-item";
     div.innerHTML = `
       <div class="news-card">
-    
+    <a href="${item.url}" target="_blank" rel="noopener noreferrer">
         <div class="news-card-header">
           <h3>${item.title}</h3>
           <p>${item.description}</p>
         </div>
-    
+    </a>
         <div class="news-card-footer">
     
           <button class="action-btn like-btn" id="like-btn-${item.news_id}" onclick="toggleLike('${item.news_id}')">

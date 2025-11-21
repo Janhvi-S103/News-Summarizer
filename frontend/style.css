@@ -1178,4 +1178,11 @@ button[type="submit"],
     color: var(--text-muted);
 }
 
+.news-card-header h3:hover{
+    text-decoration: underline;
+}
 
+a {
+    color: white;
+    text-decoration: none !important;
+}
