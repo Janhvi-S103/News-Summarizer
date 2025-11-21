@@ -375,7 +375,7 @@ exports.registrationStats = async (req, res) => {
       {
         $group: {
           _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+05:30' }
           },
           count: { $sum: 1 }
         }
