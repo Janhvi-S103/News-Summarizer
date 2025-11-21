@@ -4,6 +4,7 @@ const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const News = require('../models/News');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Add comment
 exports.addComment = async (req, res) => {
@@ -20,14 +21,21 @@ exports.addComment = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    const newsItem = await News.findById(news_id);
-    if (!newsItem) {
-      return res.status(404).json({ message: "News item not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const sanitized = sanitizeText(comment);
+
+    let userNews = await UserNews.findOne({ news_id });
+
+    if (!userNews) {
+      userNews = new UserNews({
+        news_id,
+        username: user.username,  // IMPORTANT FIX
+      });
+    }
+
     const commentId = new mongoose.Types.ObjectId();
+
 
     const newComment = {
       _id: commentId,
@@ -53,15 +61,25 @@ exports.addComment = async (req, res) => {
     userNews.comments.push(newComment);
     await userNews.save();
 
+    await Activity.create({
+      userId: req.user.userId,
+      username: user.username,
+      action: 'comment.create',
+      news_id,
+      targetId: commentId,
+      meta: { wasCensored: sanitized.wasCensored }
+    });
+
     res.status(201).json({
       message: "Comment added successfully",
       comment: newComment
     });
+
   } catch (error) {
-    logger.error('Comment error', { error: error.message, stack: error.stack });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Delete comment
 exports.deleteComment = async (req, res) => {
@@ -79,8 +97,29 @@ exports.deleteComment = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'comment.delete',
+      news_id,
+      targetId: commentId
+    });
+
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'comment.delete',
+      news_id,
+      targetId: commentId
+    });
+
     comment.remove();
     await newsItem.save();
+    logger.info('Comment deleted successfully', {
+      commentId,
+      news_id,
+      userId: req.user.userId
+    });
 
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {

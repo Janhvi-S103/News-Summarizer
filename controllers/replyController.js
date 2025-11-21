@@ -4,6 +4,7 @@ const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const News = require('../models/News');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Add reply to comment
 exports.addReply = async (req, res) => {
@@ -35,11 +36,37 @@ exports.addReply = async (req, res) => {
       userId: userId,
       username: username,
       comment: sanitized.text || comment,
-      timestamp: new Date()
+      originalText: comment,
+      wasCensored: sanitized.wasCensored,
+      censoredTerms: sanitized.censoredTerms || [],
+      parentId: commentId
     };
 
-    parentComment.replies.push(newReply);
-    await newsItem.save();
+    // Add reply to the comment
+    const parentComment = userNews.comments.id(commentId);
+    if (!parentComment.replies) {
+      parentComment.replies = [];
+    }
+    parentComment.replies.push(replyData);
+    await userNews.save();
+
+    await Activity.create({
+      userId: userId,
+      username: username,
+      action: 'reply.create',
+      news_id,
+      targetId: replyId,
+      meta: { parentId: commentId, wasCensored: sanitized.wasCensored }
+    });
+
+    logger.info('Reply added successfully', {
+      replyId,
+      commentId,
+      news_id,
+      username,
+      wasCensored: sanitized.wasCensored,
+      parentId: commentId
+    });
 
     res.status(201).json({
       message: "Reply added successfully",
@@ -70,8 +97,29 @@ exports.deleteReply = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'reply.delete',
+      targetId: replyId,
+      meta: { parentId: commentId }
+    });
+
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'reply.delete',
+      targetId: replyId,
+      meta: { parentId: commentId }
+    });
+
     reply.remove();
     await newsItem.save();
+    logger.info('Reply deleted successfully', {
+      commentId,
+      replyId,
+      userId: req.user.userId
+    });
 
     res.status(200).json({ message: "Reply deleted successfully" });
   } catch (error) {

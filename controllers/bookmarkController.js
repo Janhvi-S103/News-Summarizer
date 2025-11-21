@@ -2,6 +2,7 @@ const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const News = require('../models/News');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Toggle bookmark
 exports.toggleBookmark = async (req, res) => {
@@ -38,6 +39,14 @@ exports.toggleBookmark = async (req, res) => {
     }
 
     await entry.save();
+
+    await Activity.create({
+      userId: userId,
+      username: req.user.username,
+      action: 'news.bookmark',
+      news_id,
+      meta: { bookmarked: entry.bookmarked }
+    });
 
     res.status(200).json({
       message: entry.bookmarked ? "Bookmarked" : "Bookmark removed",
