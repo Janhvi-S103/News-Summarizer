@@ -4,54 +4,66 @@ const User = require('../models/User');
 
 // Toggle bookmark
 exports.toggleBookmark = async (req, res) => {
-  const { news_id } = req.body;
-  const userId = req.user.userId;
-
-  logger.info('Bookmark toggle attempt', { news_id, userId });
-
-  if (!news_id) {
-    logger.warn('Bookmark validation failed - missing news_id', { userId });
-    return res.status(400).json({ message: "news_id is required" });
-  }
-
   try {
-    let entry = await UserNews.findOne({ news_id });
-    const previousState = entry?.bookmarked;
+    const { news_id } = req.body;
+    const username = req.user.username;   // <-- Use username (consistent with your schema)
+
+    logger.info("Bookmark toggle attempt", { news_id, username });
+
+    if (!news_id) {
+      logger.warn("Bookmark validation failed - missing news_id", { username });
+      return res.status(400).json({ message: "news_id is required" });
+    }
+
+    // Find entry for THIS user and THIS news
+    let entry = await UserNews.findOne({ news_id, username });
+
+    const previousState = entry?.bookmarked || false;
 
     if (!entry) {
-      entry = new UserNews({ news_id, bookmarked: true });
-      logger.info('bookmark ON', { news_id, userId, previousState: false });
+      // Create a clean new entry
+      entry = new UserNews({
+        username,
+        news_id,
+        likes: 0,
+        bookmarked: true,   // First toggle = bookmark ON
+        comments: [],
+      });
+
+      logger.info("bookmark ON (new entry)", { news_id, username });
     } else {
+      // Toggle bookmark
       entry.bookmarked = !entry.bookmarked;
-      if (entry.bookmarked) {
-        logger.info('bookmark ON', { news_id, userId, previousState });
-      } else {
-        logger.info('bookmark OFF', { news_id, userId, previousState });
-      }
+
+      logger.info(entry.bookmarked ? "bookmark ON" : "bookmark OFF", {
+        news_id,
+        username,
+        previousState,
+      });
     }
 
     await entry.save();
 
-    logger.info('Bookmark updated', {
+    logger.info("Bookmark updated", {
       news_id,
-      userId,
-      bookmarkStatus: entry.bookmarked
+      username,
+      bookmarkStatus: entry.bookmarked,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: entry.bookmarked ? "Bookmarked" : "Bookmark removed",
-      bookmarked: entry.bookmarked
+      bookmarked: entry.bookmarked,
     });
+
   } catch (err) {
-    logger.error('Bookmark error', {
+    logger.error("Bookmark error", {
       error: err.message,
       stack: err.stack,
-      newsId,
-      userId
     });
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get all bookmarked news
 exports.getBookmarkedNews = async (req, res) => {

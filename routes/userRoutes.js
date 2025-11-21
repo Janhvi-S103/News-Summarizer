@@ -7,6 +7,7 @@ const { voteComment, voteReply } = require("../controllers/voteController");
 const { viewProfile, editProfile } = require("../controllers/profileController");
 const { searchNews, getNewsById, getCategories } = require("../controllers/searchController");
 const { toggleBookmark, getBookmarkedNews } = require("../controllers/bookmarkController");
+const { getStatus } = require("../controllers/statusController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadHandler");
 
@@ -33,6 +34,9 @@ router.post("/comments/:commentId/replies/:replyId/votes", authMiddleware, voteR
 // Like routes
 router.post("/likes", authMiddleware, toggleLike);
 router.get("/likes/:news_id", getLikesCount);
+
+//Status
+router.get("/getStatus/:newsId", authMiddleware, getStatus);
 
 // Profile routes
 // Get profile by username
