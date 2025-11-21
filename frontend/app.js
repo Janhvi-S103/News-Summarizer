@@ -730,6 +730,7 @@ async function loadProfile() {
     <p><strong>Username:</strong> ${user.user.username}</p>
     <p><strong>Bio:</strong> ${user.user.bio_data || "No bio yet."}</p>
   `;
+  document.getElementById("profileAvatar").src = user.user.profileImage || 'assets/default-avatar.png';
 }
 
 document.getElementById("saveBioBtn").addEventListener("click", async () => {
@@ -742,6 +743,28 @@ document.getElementById("saveBioBtn").addEventListener("click", async () => {
   });
   loadProfile();
 });
+
+//PROFILE PICTURE HANDLER
+document.getElementById("profileUpload").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    const res = await fetch(`${baseURL}/user/upload-photo`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+    });
+
+    const data = await res.json();
+    if (res.status === 200){
+        document.getElementById("profileAvatar").src = data.profileImage;
+    } else {
+        alert("Error updating profile image: " + data.message);
+    }
+});
+
+
 
 // ---------- NAVIGATION ----------
 homeBtn.onclick = () => { loadNews(); showSection(newsSection); };

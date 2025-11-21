@@ -162,11 +162,11 @@
   
           <!-- Profile photo -->
           <div class="profile-photo-container">
-              <img id="profileAvatar" src="/assets/default-avatar.png" alt="Profile Photo">
+              <img id="profileAvatar" src="data:image/png;base64,{{user.profileImage}}" alt="Profile Photo">
               <label for="profileUpload" class="upload-btn">
                   <i class="bi bi-camera-fill"></i>
               </label>
-              <input type="file" id="profileUpload" accept="image/*" style="display:none;">
+              <input type="file" id="profileUpload" name="photo" accept="image/*" style="display:none;">
           </div>
   
           <!-- Info box -->

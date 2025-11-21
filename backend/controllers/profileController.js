@@ -12,7 +12,7 @@ exports.viewProfile = async (req, res) => {
   logger.info('View profile attempt', { username });
 
   try {
-    const user = await User.findOne({ username }).select('_id username bio_data');
+    const user = await User.findOne({ username }).select('_id username bio_data photo');
 
     if (!user) {
       logger.warn('View profile failed - user not found', { username });
@@ -26,7 +26,8 @@ exports.viewProfile = async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        bio_data: user.bio_data
+        bio_data: user.bio_data,
+        profileImage: user.photo
       }
     });
   } catch (error) {
