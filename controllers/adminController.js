@@ -59,6 +59,13 @@ exports.getUserActivity = async (req, res) => {
   logger.info('getUserActivity attempt', { adminId: req.user.userId, targetUsername: username, page: pageNum });
 
   try {
+    // Check if user exists
+    const user = await User.findOne({ username });
+    if (!user) {
+      logger.warn('getUserActivity failed - user not found', { adminId: req.user.userId, targetUsername: username });
+      return res.status(404).json({ message: "User not found" });
+    }
+
     const total = await Activity.countDocuments({ username });
     
     const activities = await Activity.find({ username })
@@ -318,11 +325,11 @@ exports.permanentDeleteUser = async (req, res) => {
       { 'comments.replies.userId': userId },
       {
         $set: {
-          'comments.$[comment].replies.$[reply].userId': null,
-          'comments.$[comment].replies.$[reply].username': 'deleted_user'
+          'comments.$[].replies.$[reply].userId': null,
+          'comments.$[].replies.$[reply].username': 'deleted_user'
         }
       },
-      { arrayFilters: [{ 'comment.replies.userId': userId }] }
+      { arrayFilters: [{ 'reply.userId': userId }] }
     );
 
     // Create activity log before deletion
