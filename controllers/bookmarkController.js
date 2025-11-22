@@ -1,6 +1,7 @@
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Toggle bookmark
 exports.toggleBookmark = async (req, res) => {
@@ -43,6 +44,14 @@ exports.toggleBookmark = async (req, res) => {
     }
 
     await entry.save();
+
+    await Activity.create({
+      userId: userId,
+      username: req.user.username,
+      action: 'news.bookmark',
+      news_id,
+      meta: { bookmarked: entry.bookmarked }
+    });
 
     logger.info("Bookmark updated", {
       news_id,

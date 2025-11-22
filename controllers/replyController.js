@@ -3,6 +3,7 @@ const { sanitizeText } = require("../utils/sanitizer");
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Add reply to comment
 exports.addReply = async (req, res) => {
@@ -83,6 +84,15 @@ exports.addReply = async (req, res) => {
     parentComment.replies.push(replyData);
     await userNews.save();
 
+    await Activity.create({
+      userId: userId,
+      username: username,
+      action: 'reply.create',
+      news_id,
+      targetId: replyId,
+      meta: { parentId: commentId, wasCensored: sanitized.wasCensored }
+    });
+
     logger.info('Reply added successfully', {
       replyId,
       commentId,
@@ -142,6 +152,14 @@ exports.deleteReply = async (req, res) => {
       });
       return res.status(404).json({ message: "Reply not found or unauthorized" });
     }
+
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'reply.delete',
+      targetId: replyId,
+      meta: { parentId: commentId }
+    });
 
     logger.info('Reply deleted successfully', {
       commentId,
