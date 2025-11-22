@@ -46,7 +46,7 @@ exports.toggleBookmark = async (req, res) => {
     await entry.save();
 
     await Activity.create({
-      userId: userId,
+      userId: req.user.userId,
       username: req.user.username,
       action: 'news.bookmark',
       news_id,
@@ -82,12 +82,11 @@ exports.getBookmarkedNews = async (req, res) => {
   logger.info('Fetching bookmarked news', { userId, page, limit });
 
   try {
-    const bookmarkedEntries = await UserNews.find({ bookmarked: true })
+    const bookmarkedEntries = await UserNews.find({ bookmarked: true, username: req.user.username })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const totalCount = await UserNews.countDocuments({ bookmarked: true });
-
+    const totalCount = await UserNews.countDocuments({ bookmarked: true, username: req.user.username });
     logger.info('Bookmarked news fetched', {
       userId,
       totalBookmarked: totalCount,

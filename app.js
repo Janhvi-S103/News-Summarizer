@@ -17,7 +17,8 @@ connectDB();
 
 // ✅ Enable CORS before defining routes
 app.use(cors({
-  origin: "http://127.0.0.1:5500", // your frontend URL
+  //Accept all ports from localhost
+  origin: ["http://127.0.0.1:5500", "http://127.0.0.1:5503", "http://localhost:*"], // your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));

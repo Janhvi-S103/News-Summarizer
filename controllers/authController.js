@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
 
         // Generate token and set cookie
         const token = generateToken(user._id);
-        setAuthCookie(res, token);
+        setAuthCookie(res, token, role="user");
         
         // Log registration activity
         await Activity.create({
@@ -106,7 +106,8 @@ exports.login = async (req, res) => {
         }
 
         const token = generateToken(user._id);
-        setAuthCookie(res, token);
+        const role = user.role || "user";
+        setAuthCookie(res, token, role);
         
         // Update lastLogin and log activity
         user.lastLogin = new Date();
@@ -124,6 +125,36 @@ exports.login = async (req, res) => {
     }
     catch(error) {
         logger.error(`Login error for user: ${req.body.username}`, { 
+            error: error.message, 
+            stack: error.stack 
+        });
+        res.status(500).json({ message: error.message });
+    }
+}
+
+exports.checkStatus = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            logger.warn(`Status check failed - User not found`, { userId: req.user.userId });
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        try{
+            res.json({status: user.status, suspendedUntil: user.suspendedUntil});
+            logger.info(`Status check successful`, { userId: req.user._id, status: user.status } );
+        }
+        catch(err){
+            logger.error(`Error sending status response`, { 
+                userId: req.user._id,
+                error: err.message,
+                stack: err.stack
+            });
+            res.status(500).json({ message: "Internal server error" });
+        }
+    }
+    catch(error) {
+        logger.error(`Status check error for userId: ${req.user._id}`, { 
             error: error.message, 
             stack: error.stack 
         });

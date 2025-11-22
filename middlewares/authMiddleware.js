@@ -5,7 +5,7 @@ const logger = require('../utils/logging');
 module.exports = async (req, res, next) => {
     try {
         // Try to get token from cookie first, then Authorization header
-        let token = req.cookies.authToken;
+        let token = req.cookies.userAuth;
         
         if (!token && req.headers.authorization) {
             const authHeader = req.headers.authorization;

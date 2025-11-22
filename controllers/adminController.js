@@ -49,6 +49,27 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getAllUserActivities = async (req, res) => {
+      try {
+    const username = req.user.username;
+
+    const userNews = await UserNews.find({ username });
+
+    const activity = userNews.map(item => ({
+      username: username,              // ADD THIS
+      news_id: item.news_id,
+      likes: item.likes,
+      bookmarked: item.bookmarked,
+      comments: item.comments || []
+    }));
+
+    res.status(200).json({ activity });
+
+  } catch (err) {
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
 // Get user activity history with summary
 exports.getUserActivity = async (req, res) => {
   const { username } = req.params;
@@ -216,6 +237,23 @@ exports.unsuspendUser = async (req, res) => {
   }
 };
 
+exports.getNewUsersCount = async (req, res) => {
+  try {
+    const since = new Date();
+    since.setDate(since.getDate() - 1); // last 24 hours
+
+    const count = await User.countDocuments({
+      createdAt: { $gte: since }
+    });
+
+    res.json({ newUsers: count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching new users count" });
+  }
+};
+
+
 // Soft delete user (mark as deleted, keep data for audit)
 exports.softDeleteUser = async (req, res) => {
   const { id } = req.params;
@@ -275,7 +313,7 @@ exports.softDeleteUser = async (req, res) => {
 // Permanent delete user from database
 exports.permanentDeleteUser = async (req, res) => {
   const { id } = req.params;
-  const { confirm } = req.body;
+  const confirm = req.body?.confirm;
   const adminId = req.user.userId;
 
   logger.info('permanentDeleteUser attempt', { adminId, targetUserId: id });
@@ -318,6 +356,12 @@ exports.permanentDeleteUser = async (req, res) => {
         }
       },
       { arrayFilters: [{ 'elem.userId': userId }] }
+    );
+
+    await News.updateMany(
+        { "comments.username": targetUsername },
+        { $set: { "comments.$[c].username": "deleted_user" } },
+        { arrayFilters: [{ "c.username": targetUsername }] }
     );
 
     // Anonymize replies in UserNews
@@ -433,6 +477,8 @@ exports.registrationStats = async (req, res) => {
 module.exports = {
   getAllUsers: exports.getAllUsers,
   getUserActivity: exports.getUserActivity,
+  getAllUserActivities: exports.getAllUserActivities,
+  getNewUsersCount: exports.getNewUsersCount,
   suspendUser: exports.suspendUser,
   unsuspendUser: exports.unsuspendUser,
   softDeleteUser: exports.softDeleteUser,

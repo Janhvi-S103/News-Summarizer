@@ -1,8 +1,10 @@
-exports.setAuthCookie = (res, token) => {
-  res.cookie("authToken", token, { 
+exports.setAuthCookie = (res, token, role) => {
+  const cookieName = role === "admin" ? "adminAuth" : "userAuth";
+
+  res.cookie(cookieName, token, { 
     httpOnly: true,
-    secure: true,          // ✅ REQUIRED for SameSite=None
-    sameSite: "None",      // ✅ Enables cross-site cookies
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: true,
+    sameSite: "None",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
