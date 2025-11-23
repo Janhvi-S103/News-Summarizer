@@ -173,6 +173,39 @@ router.get('/search', async (req, res) => {
     });
 });
 
+router.get('/admin', authMiddleware, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).send('Access Denied: Admin privileges required');
+        }
+
+        // Fetch all users for admin panel
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+
+        // Get user statistics
+        const totalUsers = await User.countDocuments();
+        const activeUsers = await User.countDocuments({ status: 'active' });
+        const suspendedUsers = await User.countDocuments({ status: 'suspended' });
+        const adminUsers = await User.countDocuments({ role: 'admin' });
+
+        res.render('admin', {
+            title: 'Admin Panel',
+            user: req.user,
+            users,
+            stats: {
+                total: totalUsers,
+                active: activeUsers,
+                suspended: suspendedUsers,
+                admins: adminUsers
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 router.get('/logout', (req, res) => {
     res.clearCookie('authToken');
     res.redirect('/');

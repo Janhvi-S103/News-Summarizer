@@ -21,21 +21,20 @@ exports.addComment = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     const sanitized = sanitizeText(comment);
 
-    let userNews = await UserNews.findOne({ news_id });
+    // Get or create UserNews for this user and news
+    let userNews = await UserNews.findOne({ news_id, username: user.username });
 
     if (!userNews) {
       userNews = new UserNews({
         news_id,
-        username: user.username,  // IMPORTANT FIX
+        username: user.username,
       });
     }
 
     const commentId = new mongoose.Types.ObjectId();
-
 
     const newComment = {
       _id: commentId,
@@ -46,18 +45,7 @@ exports.addComment = async (req, res) => {
       replies: []
     };
 
-    newsItem.comments.unshift(newComment); // Add to beginning
-    await newsItem.save();
-
-    // Also update UserNews to track that this user commented (optional, but good for activity feed)
-    let userNews = await UserNews.findOne({ news_id, username: user.username });
-    if (!userNews) {
-      userNews = new UserNews({ news_id, username: user.username });
-    }
-    // We don't need to store the full comment in UserNews anymore if we don't want to duplicate,
-    // but for the Activity Feed to work as currently implemented (fetching UserNews), we might need to.
-    // The current profile.ejs iterates over activity.comments.
-    // Let's keep a lightweight record or duplicate it for now to ensure Activity Feed works.
+    // Store comment in UserNews
     userNews.comments.push(newComment);
     await userNews.save();
 

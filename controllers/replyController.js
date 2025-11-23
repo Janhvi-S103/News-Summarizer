@@ -42,13 +42,12 @@ exports.addReply = async (req, res) => {
       parentId: commentId
     };
 
-    // Add reply to the comment
-    const parentComment = userNews.comments.id(commentId);
+    // Add reply to the parent comment
     if (!parentComment.replies) {
       parentComment.replies = [];
     }
-    parentComment.replies.push(replyData);
-    await userNews.save();
+    parentComment.replies.push(newReply);
+    await newsItem.save();
 
     await Activity.create({
       userId: userId,

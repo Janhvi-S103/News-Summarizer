@@ -7,7 +7,13 @@
       <% if (user) { %>
       <a href="/bookmarks" class="nav-link">Bookmarks</a>
       <a href="/activity" class="nav-link">Activity</a>
+      <% if (user.role === 'admin') { %>
+      <a href="/admin" class="nav-link" style="color: var(--primary-color)"
+        >Admin</a
+      >
+      <% } %>
       <a href="/profile" class="nav-link">Profile</a>
+      <a href="/logout" class="nav-link">Logout</a>
       <% } else { %>
       <a href="/login" class="nav-link">Login</a>
       <a href="/register" class="btn btn-primary">Sign Up</a>

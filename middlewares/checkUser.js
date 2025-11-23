@@ -18,7 +18,7 @@ module.exports = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('username bio_data'); // Added bio_data for profile
+        const user = await User.findById(decoded.userId).select('username bio_data role'); // Added role
 
         if (!user) {
             res.locals.user = null;
@@ -28,7 +28,8 @@ module.exports = async (req, res, next) => {
         req.user = {
             userId: decoded.userId,
             username: user.username,
-            bio_data: user.bio_data
+            bio_data: user.bio_data,
+            role: user.role || 'user'
         };
         res.locals.user = req.user;
         next();
