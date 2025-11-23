@@ -50,23 +50,44 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.getAllUserActivities = async (req, res) => {
-      try {
-    const username = req.user.username;
+  const { page = 1, limit = 20 } = req.query;
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
 
-    const userNews = await UserNews.find({ username });
+  logger.info('getUserActivity attempt', { adminId: req.user.userId, page: pageNum });
 
-    const activity = userNews.map(item => ({
-      username: username,              // ADD THIS
-      news_id: item.news_id,
-      likes: item.likes,
-      bookmarked: item.bookmarked,
-      comments: item.comments || []
-    }));
+  try {
 
-    res.status(200).json({ activity });
+    const total = await Activity.countDocuments({});
+    
+    const activities = await Activity.find({})
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum);
 
-  } catch (err) {
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    // Get action summary (top 5 actions)
+    const actionSummary = await Activity.aggregate([
+      { $group: { _id: '$action', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+
+    logger.info('getUserActivity success', { adminId: req.user.userId, returned: activities.length });
+
+    res.status(200).json({
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      activities,
+      actionSummary
+    });
+  } catch (error) {
+    logger.error('getUserActivity error', {
+      error: error.message,
+      stack: error.stack,
+      adminId: req.user.userId
+    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
