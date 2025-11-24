@@ -3,7 +3,7 @@ const { activity, uploadPhoto } = require("../controllers/userController");
 const { addComment, deleteComment, getComments } = require("../controllers/commentController");
 const { toggleLike, getLikesCount } = require("../controllers/likeController");
 const { addReply, deleteReply, getReplies } = require("../controllers/replyController");
-const { voteComment, voteReply } = require("../controllers/voteController");
+const { voteComment, voteReply, getVoteCount } = require("../controllers/voteController");
 const { viewProfile, editProfile } = require("../controllers/profileController");
 const { searchNews, getNewsById, getCategories } = require("../controllers/searchController");
 const { toggleBookmark, getBookmarkedNews } = require("../controllers/bookmarkController");
@@ -30,6 +30,7 @@ router.get("/comments/:commentId/replies", authMiddleware, getReplies);
 // Vote routes
 router.post("/comments/:commentId/votes", authMiddleware, voteComment);
 router.post("/comments/:commentId/replies/:replyId/votes", authMiddleware, voteReply);
+router.get("/comments/:commentId/getVotes", authMiddleware, getVoteCount);
 
 // Like routes
 router.post("/likes", authMiddleware, toggleLike);

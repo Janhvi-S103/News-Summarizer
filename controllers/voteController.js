@@ -197,3 +197,20 @@ exports.voteReply = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getVoteCount = async (req, res) => {
+    const { commentId } = req.params;
+    
+    try {
+        const userNews = await UserNews.findOne({ "comments._id": commentId }, { "comments.$": 1 });
+        if (!userNews) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        const score = userNews.comments[0].score;
+        
+        res.status(200).json({ score });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
