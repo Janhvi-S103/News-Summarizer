@@ -18,7 +18,7 @@ connectDB();
 // ✅ Enable CORS before defining routes
 app.use(cors({
   //Accept all ports from localhost
-  origin: ["http://127.0.0.1:5500", "http://127.0.0.1:5503", "http://localhost:5503"], // your frontend URL
+  origin: ["http://127.0.0.1:5500", "http://127.0.0.1:5503", "http://localhost:5503", "https://news-bite-frontend.vercel.app/","https://news-bite-frontend.vercel.app/admin/"], // your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
