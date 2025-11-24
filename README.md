@@ -19,26 +19,16 @@ A web app that fetches news articles, displays summaries, and allows users to se
 NEWS-SUMMARIZER/
 │
 ├── controllers/
-│   ├── authController.js          # Handles user authentication (register, login, profile)
-│   └── userController.js          # Handles user interactions (like, comment, bookmark)
-│
+|
 ├── database/
-│   └── DatabaseConnection.js      # MongoDB connection setup
 │
-├── logs/                          # Log files (if any)
+├── logs/
 │
 ├── middlewares/
-│   └── authMiddleware.js          # JWT authentication middleware
 │
 ├── models/
-│   ├── News.js                    # Schema for news articles
-│   ├── User.js                    # Schema for user accounts
-│   └── UserNews.js                # Schema for user-news interactions (likes, comments, bookmarks)
 │
 ├── routes/
-│   ├── authRoutes.js              # Authentication-related API routes
-│   ├── newsRoutes.js              # News fetching and category routes
-│   └── userRoutes.js              # User activity routes (comment, like, bookmark)
 │
 ├── services/                      # For future modular services (e.g., external APIs, summarization)
 │
